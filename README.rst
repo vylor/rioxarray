@@ -5,7 +5,7 @@ rioxarray README
 rasterio xarray extension.
 
 
-.. image:: https://img.shields.io/badge/all_contributors-47-orange.svg?style=flat-square
+.. image:: https://img.shields.io/badge/all_contributors-49-orange.svg?style=flat-square
     :alt: All Contributors
     :target: https://github.com/vylor/rioxarray/blob/master/AUTHORS.rst
 
