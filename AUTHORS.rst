@@ -75,6 +75,9 @@ Thanks goes to these wonderful people (`emoji key <https://allcontributors.org/d
           <td align="center" valign="top" width="14.28%"><a href="https://vborysenko.com/"><img src="https://avatars.githubusercontent.com/u/86121045?v=4&size=100" width="100px" height="100px" alt="Volodymyr Borysenko"/><br /><sub><b>Volodymyr Borysenko</b></sub></a><br /><a href="https://github.com/vylor/rioxarray/issues?q=author%3AVolodymyrLinuxovich" title="Bug reports">🐛</a></td>
           <td align="center" valign="top" width="14.28%"><a href="https://github.com/Avicennasis"><img src="https://avatars.githubusercontent.com/u/913872?v=4&size=100" width="100px" height="100px" alt="Léon Simmons"/><br /><sub><b>Léon Simmons</b></sub></a><br /><a href="https://github.com/vylor/rioxarray/commits?author=Avicennasis" title="Documentation">📖</a></td>
         </tr>
+        <tr>
+          <td align="center" valign="top" width="14.28%"><a href="https://github.com/raashish1601"><img src="https://avatars.githubusercontent.com/u/94279692?v=4&size=100" width="100px" height="100px" alt="Raashish Aggarwal"/><br /><sub><b>Raashish Aggarwal</b></sub></a><br /><a href="https://github.com/vylor/rioxarray/issues?q=author%3Araashish1601" title="Bug reports">🐛</a></td>
+        </tr>
       </tbody>
     </table>
 

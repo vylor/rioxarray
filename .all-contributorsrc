@@ -502,6 +502,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "raashish1601",
+      "name": "Raashish Aggarwal",
+      "avatar_url": "https://avatars.githubusercontent.com/u/94279692?v=4",
+      "profile": "https://github.com/raashish1601",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7
