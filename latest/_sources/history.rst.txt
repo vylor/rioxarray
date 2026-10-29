@@ -1,10 +1,9 @@
 History
 =======
 
-Latest
+0.24.0
 ------
 - DEP: Update supported Python (3.13+), GDAL (3.10+), pyproj (3.7+), numpy (2.1+) versions (#948)
-
 - BUG: Raise informative ``CoordinateDimensionError`` when spatial coordinates
   are not 1-dimensional and fix ``rio.width``/``rio.height`` with 2D
   coordinates, which also fixes the output size of ``rio.reproject`` with
