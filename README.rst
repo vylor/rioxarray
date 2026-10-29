@@ -5,10 +5,6 @@ rioxarray README
 rasterio xarray extension.
 
 
-.. image:: https://badges.gitter.im/rioxarray/community.svg
-   :alt: Join the chat at https://gitter.im/rioxarray/community
-   :target: https://gitter.im/rioxarray/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-
 .. image:: https://img.shields.io/badge/all_contributors-47-orange.svg?style=flat-square
     :alt: All Contributors
     :target: https://github.com/vylor/rioxarray/blob/master/AUTHORS.rst
@@ -55,7 +51,6 @@ Bugs/Questions
 
 - Report bugs/feature requests: https://github.com/vylor/rioxarray/issues
 - Ask questions: https://github.com/vylor/rioxarray/discussions
-- Ask developer questions: https://gitter.im/rioxarray/community
 - Ask questions from the GIS community: https://gis.stackexchange.com/questions/tagged/rioxarray
 
 Credits
