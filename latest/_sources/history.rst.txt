@@ -9,6 +9,7 @@ Latest
   are not 1-dimensional and fix ``rio.width``/``rio.height`` with 2D
   coordinates, which also fixes the output size of ``rio.reproject`` with
   ``src_geoloc_array`` (issue #848)
+- BUG: Use ``@`` for affine matrix multiplication and require rasterio>=1.5.1 and affine>=3 (#937)
 
 0.23.0
 ------
