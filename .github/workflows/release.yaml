@@ -60,5 +60,5 @@ jobs:
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          skip_existing: true
+          skip-existing: true
           # repository_url: https://test.pypi.org/legacy/  # To test
