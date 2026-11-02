@@ -40,21 +40,25 @@ jobs:
           retention-days: 5
 
   publish:
-    name: Publish on PyPI
+    name: >-
+      Publish Python 🐍 distribution 📦 to PyPI
     needs: [build]
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/rioxarray/
+    permissions:
+      id-token: write
     # release on every tag
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: artifact
-          path: dist
+          path: dist/
 
-      - name: Upload Wheels to PyPI
+      - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
           skip_existing: true
           # repository_url: https://test.pypi.org/legacy/  # To test
