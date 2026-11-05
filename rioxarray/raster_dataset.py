@@ -600,15 +600,4 @@ class RasterDataset(XRasterBase):
             da_info["crs"].append(self._obj[var].rio.crs)
             da_info["tf"].append(self._obj[var].rio.transform())
 
-        # Check ds uniformity (same CRS and transform across the arrays)
-        uniform_ds = len(set(da_info["crs"])) == 1 and len(set(da_info["tf"])) == 1
-
-        # Create repr
-        repr_list += ["Profile:"] + [
-            "\t\t".join(f"\t{r}".splitlines(True))
-            for r in self._obj[self.vars[0]].rio._to_repr(
-                from_ds=True, uniform_ds=uniform_ds
-            )
-        ]
-
         return "\n".join(repr_list)

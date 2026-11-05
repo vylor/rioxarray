@@ -1638,3 +1638,60 @@ def test_repr_tifs():
         str_arr = str(rioxarray.open_rasterio(input_array).rio)
         print(str_arr)
         assert str_arr.startswith("rioxarray.RasterDataArray")
+
+
+def test_repr_gcps():
+    """Exact test of __repr__ with GCPs"""
+    str_arr = str(
+        rioxarray.open_rasterio(os.path.join(TEST_INPUT_DATA_DIR, "cint16.tif")).rio
+    )
+    assert (
+        str_arr
+        == "rioxarray.RasterDataArray: (y[latitude (°)]: 100, x[latitude (°)]: 100, z[band]: 1)\nProfile:\n\tcrs: WGS 84 | EPSG:4326\n\tgcps: (col: -450.0, row:: -100.0) -> (x: 12.426, y: 47.092, z: 2322.000); ...\n\tnodata: 0j\n\tblockxsize: 100\n\tblockysize: 20\n\tdtype: complex_int16"
+    )
+
+
+def test_repr_rpcs():
+    """Exact test of __repr__ with RPCs"""
+    str_arr = str(
+        rioxarray.open_rasterio(os.path.join(TEST_INPUT_DATA_DIR, "test_rpcs.tif")).rio
+    )
+    assert (
+        str_arr
+        == "rioxarray.RasterDataArray: (y[latitude (°)]: 274, x[latitude (°)]: 232, z[band]: 1)\nProfile:\n\tcrs: WGS 84 | EPSG:4326\n\trpcs: RPC(height_off=1046.87008017261, height_scale=962.000000000024, lat_off=39.8199525998031, lat_scale=0.076441044582353, line_den_coeff=[1.0, 0.00012882483485981, 5.18079663617909e-05, 1.77817481593977e-06, 8.54593795382225e-06, 6.9890205659672e-09, -7.86081960510396e-08, -3.91721404710236e-07, 1.58673145091733e-05, -2.27250888009756e-07, -2.28955654399361e-08, -3.71402416477911e-09, -1.96318964477762e-07, -1.05635703127992e-11, -5.93328473156772e-08, 1.57597697902012e-07, 5.78981101050917e-11, -2.19870956549469e-09, -5.83164939557346e-08, 1.14631254283597e-14], line_num_coeff=[0.000125315316894273, -0.223692125135113, -1.12943298626266, 0.000510344199971285, 0.000190043786836214, -2.99870751468156e-07, -2.22582264371528e-06, -0.00050888723709978, -0.000116928122822229, -7.61323460532239e-08, 1.1737560754429e-08, 2.76011924345546e-07, 7.12576395351325e-06, 5.08199933226297e-08, 2.33090176665846e-06, 1.51074647307671e-05, 2.56492735855626e-07, -2.42140419079789e-09, 9.16036426849014e-08, -1.04565982602543e-10], line_off=2295.0, line_scale=3540.0, long_off=46.7851243210802, long_scale=0.088548703456659, samp_den_coeff=[1.0, -0.000201124852532438, 0.000724398280712982, -0.0012225857350293, 1.68798873345476e-05, 1.02885156883992e-06, 3.38341554827482e-06, 1.06215269267868e-05, 5.18701992591669e-05, -1.32158558741314e-06, -4.40352174712215e-08, -8.31387424786467e-10, 1.14362143538985e-08, -3.28056023381503e-09, -1.67796349116994e-08, 5.53559594294645e-08, -8.90897513163945e-09, 1.71711238108532e-09, -9.66770273807733e-08, 2.74632741980613e-10], samp_num_coeff=[-8.46881096438069e-05, 1.21266557817806, -0.301300635795582, -0.0041459325894107, -0.000642040730285188, 0.000954494881359555, -0.000239727729617519, 9.45834351434155e-05, -9.63659865399832e-05, -2.64123897440935e-06, 3.82005269050098e-06, 2.32157827620512e-06, 5.25747522412026e-05, -5.63643030207731e-08, 2.40911103415131e-05, -1.77356986546036e-05, -5.84500779100695e-09, 1.9191207346452e-06, -1.51716319423258e-06, 5.67499608839285e-10], samp_off=2792.0, samp_scale=2950.0, err_bias=1.0, err_rand=-1.0)\n\tnodata: 0\n\tblockxsize: 232\n\tblockysize: 17\n\tdtype: uint16"
+    )
+
+
+def test_repr_no_nodata():
+    """Exact test of __repr__ with normal GTiff without nodata"""
+    str_arr = str(
+        rioxarray.open_rasterio(os.path.join(TEST_INPUT_DATA_DIR, "2d_test.tif")).rio
+    )
+    assert (
+        str_arr
+        == "rioxarray.RasterDataArray: (y[latitude (m)]: 10, x[latitude (m)]: 10, z[band]: 1)\nProfile:\n\tcrs: WGS 84 / UTM zone 11N | EPSG:32611\n\ttransform: \n\t\t\t| 14.26, 9.26, 305827.93|\n\t\t\t| 9.26,-14.26, 5223236.60|\n\t\t\t| 0.00, 0.00, 1.00|\n\tbounds: (305827.93, 5223236.6, 305997.93, 5223406.6)\n\tnodata: None\n\tblockxsize: 10\n\tblockysize: 10\n\tdtype: float64"
+    )
+
+
+def test_repr_exotic_crs():
+    """Exact test of __repr__ with exotic CRS (no EPSG code)"""
+    str_arr = str(
+        rioxarray.open_rasterio(os.path.join(TEST_INPUT_DATA_DIR, "cog.tif")).rio
+    )
+    assert (
+        str_arr
+        == "rioxarray.RasterDataArray: (y[latitude (m)]: 500, x[latitude (m)]: 500, z[band]: 1)\nProfile:\n\tcrs: Albers\n\ttransform: \n\t\t\t| 300.00, 0.00, 1634415.00|\n\t\t\t| 0.00,-300.00, 2714805.00|\n\t\t\t| 0.00, 0.00, 1.00|\n\tbounds: (1634415.0, 2564805.0, 1784415.0, 2714805.0)\n\tnodata: -9999\n\tblockxsize: 256\n\tblockysize: 256\n\tdtype: int16"
+    )
+
+
+def test_repr_ds():
+    """Exact test of __repr__ with a dataset"""
+    str_arr = str(
+        rioxarray.open_rasterio(
+            os.path.join(TEST_INPUT_DATA_DIR, "PLANET_SCOPE_3D.nc")
+        ).rio
+    )
+    assert (
+        str_arr
+        == "rioxarray.RasterDataset\nDimensions: y[latitude (m)]: 10, x[latitude (m)]: 10, z[time]: 2\nData variables:\n\tblue\ty[latitude (m)]: 10, x[latitude (m)]: 10, z[time]: 2\n\tgreen\ty[latitude (m)]: 10, x[latitude (m)]: 10, z[time]: 2"
+    )

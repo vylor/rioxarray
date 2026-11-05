@@ -1100,7 +1100,7 @@ class RasterArray(XRasterBase):
             with memfile.open() as src_ds:
                 yield src_ds
 
-    def _to_repr(self, from_ds: bool = False, uniform_ds: bool = True) -> list[str]:
+    def _to_repr(self) -> list[str]:
         """
         Function representing the DataArray. Not set directly in __repr__ as it is used also in Datasets.
 
@@ -1114,54 +1114,69 @@ class RasterArray(XRasterBase):
 
         # Never leave CRS empty
         if self.crs is None:
-            crs = "Unprojected"
+            crs = "Undefined"
         else:
-            crs = self.crs.to_epsg()
+            from pyproj import CRS
+
+            pyproj_crs = CRS(self.crs)
+            epsg_auth = pyproj_crs.to_authority(min_confidence=100)
+            epsg_repr = f" | {':'.join(epsg_auth)}" if epsg_auth is not None else ""
+            crs = f"{pyproj_crs.name}{epsg_repr}"
 
         # Create representation dict
         # NOTE: height, width and count values are already present in the dimensions repr, so don't set them again
-        repr_dict = {}
+        repr_dict = {
+            "crs": crs,
+        }
 
-        # If we have a native DataArray or a Dataset with uniform coordinates
-        if not from_ds or (from_ds and uniform_ds):
-            repr_dict.update(
-                {
-                    "crs": crs,
+        # Look for least common to most common : rpcs > gcps > transform
+        # Only display one of them
+        # It makes no sense to mix rpcs with gcps with transform
+        rpcs = self.get_rpcs()
+
+        if not rpcs:
+            gcps = self.get_gcps()
+            if not gcps:
+                geo_dict = {
                     "transform": f"\n{self.transform()}",
-                    "gcps": self.get_gcps(),
-                    "rpcs": self.get_rpcs(),
                     "bounds": self.bounds(),
                 }
-            )
-
-        # If we have a native DataArray, this is not useful in case of a Dataset (because it may vary between variables)
-        if not from_ds:
-            # Manage chunks
-            try:
-                pref_chunks = self._obj.encoding["preferred_chunks"]
-                blockxsize = pref_chunks["x"]
-                blockysize = pref_chunks["y"]
-            except KeyError:
-                blockxsize = None
-                blockysize = None
-
-            # Never leave nodata empty
-            nodata = (
-                self.encoded_nodata if self.encoded_nodata is not None else self.nodata
-            )
-
-            if nodata is None:
-                nodata = "Unset"
-
-            repr_dict.update(
-                {
-                    "nodata": nodata,
-                    "blockxsize": blockxsize,
-                    "blockysize": blockysize,
-                    "dtype": self._obj.encoding.get("rasterio_dtype"),
+            else:
+                # GCPs can be verbose -> grab the first one
+                first_gcp = gcps[0]
+                geo_dict = {
+                    "gcps": f"(col: {first_gcp.col}, row:: {first_gcp.row}) -> (x: {first_gcp.x:0.3f}, y: {first_gcp.y:0.3f}, z: {first_gcp.z:0.3f}); ..."
                 }
-            )
+        else:
+            geo_dict = {"rpcs": rpcs}
 
+        repr_dict.update(geo_dict)
+
+        # Manage chunks
+        try:
+            pref_chunks = self._obj.encoding["preferred_chunks"]
+            blockxsize = pref_chunks["x"]
+            blockysize = pref_chunks["y"]
+        except KeyError:
+            blockxsize = None
+            blockysize = None
+
+        # Never leave nodata empty
+        nodata = self.encoded_nodata if self.encoded_nodata is not None else self.nodata
+
+        if nodata is None:
+            nodata = "None"
+
+        repr_dict.update(
+            {
+                "nodata": nodata,
+                "blockxsize": blockxsize,
+                "blockysize": blockysize,
+                "dtype": self._obj.encoding.get("rasterio_dtype"),
+            }
+        )
+
+        # Prune none values
         return [f"{key}: {val}" for key, val in repr_dict.items() if val is not None]
 
     def __repr__(self) -> str:
