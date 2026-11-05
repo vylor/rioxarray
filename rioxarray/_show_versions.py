@@ -4,6 +4,7 @@ Utility methods to print system info for debugging
 adapted from :func:`sklearn.utils._show_versions`
 which was adapted from :func:`pandas.show_versions`
 """
+
 # pylint: disable=import-outside-toplevel
 import importlib.metadata
 import os
@@ -28,7 +29,7 @@ def _get_sys_info() -> dict[str, str]:
 
 
 def _get_main_info() -> dict[str, str]:
-    """Get the main dependency information to hightlight.
+    """Get the main dependency information to highlight.
 
     Returns
     -------

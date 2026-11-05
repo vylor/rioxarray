@@ -41,6 +41,7 @@ from rioxarray._spatial_utils import (  # noqa: F401, pylint: disable=unused-imp
 from rioxarray.crs import crs_from_user_input
 from rioxarray.enum import Convention
 from rioxarray.exceptions import (
+    CoordinateDimensionError,
     DimensionError,
     DimensionMissingCoordinateError,
     InvalidDimensionOrder,
@@ -130,7 +131,7 @@ class XRasterBase:
 
         .. deprecated:: 0.15.8
             It is recommended to use `rio.write_crs()` instead. This
-        method will likely be removed in a future release.
+            method will likely be removed in a future release.
 
         Parameters
         ----------
@@ -439,7 +440,7 @@ class XRasterBase:
             src_resolution_x, src_resolution_y = self.resolution(recalc=recalc)
         except (DimensionMissingCoordinateError, DimensionError):
             return Affine.identity() if transform is None else transform
-        return Affine.translation(src_left, src_top) * Affine.scale(
+        return Affine.translation(src_left, src_top) @ Affine.scale(
             src_resolution_x, src_resolution_y
         )
 
@@ -670,7 +671,7 @@ class XRasterBase:
         """int: Returns the width of the dataset (x dimension size)"""
         if self._width is not None:
             return self._width
-        self._width = self._obj[self.x_dim].size
+        self._width = self._obj.sizes[self.x_dim]
         return self._width
 
     @property
@@ -678,7 +679,7 @@ class XRasterBase:
         """int: Returns the height of the dataset (y dimension size)"""
         if self._height is not None:
             return self._height
-        self._height = self._obj[self.y_dim].size
+        self._height = self._obj.sizes[self.y_dim]
         return self._height
 
     @property
@@ -736,6 +737,16 @@ class XRasterBase:
             raise DimensionMissingCoordinateError(f"{self.x_dim} missing coordinates.")
         if self.y_dim not in self._obj.coords:
             raise DimensionMissingCoordinateError(f"{self.y_dim} missing coordinates.")
+        for dim in (self.x_dim, self.y_dim):
+            if self._obj[dim].ndim != 1:
+                raise CoordinateDimensionError(
+                    f"The {dim} coordinate must be 1-dimensional to determine "
+                    f"the bounds, resolution, or transform; it has "
+                    f"{self._obj[dim].ndim} dimensions. To reproject data on a "
+                    f"curvilinear grid, pass the 2D coordinates to 'reproject' "
+                    f"using the 'src_geoloc_array' keyword argument."
+                    f"{_get_data_var_message(self._obj)}"
+                )
         try:
             left = float(self._obj[self.x_dim][0])
             right = float(self._obj[self.x_dim][-1])

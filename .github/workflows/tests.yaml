@@ -13,17 +13,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PIP_NO_BINARY: rasterio
   DEBIAN_FRONTEND: noninteractive
+  UV_LINK_MODE: copy
 
 jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - uses: pre-commit/action@v3.0.1
 
   docker_tests:
@@ -34,43 +34,38 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: ['3.13', '3.14', '3.15']
         rasterio-version: ['']
         xarray-version: ['']
         run-with-scipy: ['YES']
-        gdal-version: ['3.12.1']
+        gdal-version: ['3.13.2']
         include:
-          - python-version: '3.12'
+          - python-version: '3.13'
             rasterio-version: ''
-            xarray-version: '==2024.7.0'
-            run-with-scipy: 'YES'
-            gdal-version: '3.8.5'
-          - python-version: '3.12'
-            rasterio-version: ''
-            xarray-version: ''
-            run-with-scipy: 'YES'
-            gdal-version: '3.9.3'
-          - python-version: '3.12'
-            rasterio-version: ''
-            xarray-version: ''
+            xarray-version: '==2026.2.0'
             run-with-scipy: 'YES'
             gdal-version: '3.10.3'
-          - python-version: '3.12'
+          - python-version: '3.13'
             rasterio-version: ''
             xarray-version: ''
             run-with-scipy: 'YES'
             gdal-version: '3.11.5'
-          - python-version: '3.12'
+          - python-version: '3.13'
+            rasterio-version: ''
+            xarray-version: ''
+            run-with-scipy: 'YES'
+            gdal-version: '3.12.2'
+          - python-version: '3.13'
             rasterio-version: ''
             xarray-version: ''
             run-with-scipy: 'NO'
-            gdal-version: '3.11.5'
+            gdal-version: '3.12.2'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Update
         run: |
-          rm /etc/apt/sources.list.d/apache-arrow.sources
+          rm /etc/apt/sources.list.d/apache-arrow.sources || true  # GDAL<=3.12 Remove arrow sources to avoid conflicts with libarrow-dev
           apt-get update
           apt-get -y install software-properties-common
           add-apt-repository -y ppa:deadsnakes/ppa
@@ -79,37 +74,40 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: |
           apt-get install -y --no-install-recommends \
-            python${{ matrix.python-version }} \
             python${{ matrix.python-version }}-dev \
-            python${{ matrix.python-version }}-venv \
-            python3-pip \
             g++ \
             git
           chown -R $(whoami) /github/home/
 
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: 'true'
+          enable-cache: "false"
+
       - name: Install dependencies
         run: |
-          python${{ matrix.python-version }} -m venv testenv
-          . testenv/bin/activate
-          python -m pip install --upgrade pip
           export INSTALL_DEPS='rasterio${{ matrix.rasterio-version }} xarray${{ matrix.xarray-version }}'
           [ "${{ matrix.run-with-scipy }}" = "YES" ] && export INSTALL_DEPS="${INSTALL_DEPS} scipy"
-          python -m pip install $INSTALL_DEPS
-          python -m pip install -e . --group test
+          uv pip install $INSTALL_DEPS --no-binary rasterio
+          uv pip install -e . --group test --no-binary rasterio
 
       - name: Check and Log Environment
         shell: bash
         run: |
-          . testenv/bin/activate
           python -V
           python -c "import rioxarray; rioxarray.show_versions();"
 
       - name: run tests
         run: |
-          . testenv/bin/activate
           python -m pytest --cov-report term-missing --cov=rioxarray --cov-report xml
 
-      - uses: codecov/codecov-action@v5
+      - name: Install curl for codecov
+        run: |
+          apt-get install -y --no-install-recommends curl
+
+      - uses: codecov/codecov-action@v7
 
 
   conda_test:
@@ -120,17 +118,17 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, macos-15-intel, windows-latest]
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: ['3.13', '3.14']
         gdal-version: ['*']
         rasterio-version: ['*']
         xarray-version: ['*']
         run-with-scipy: ['YES']
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Conda
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@v3
         with:
           # https://github.com/mamba-org/setup-micromamba/issues/225
           micromamba-version: 1.5.10-0
@@ -163,14 +161,14 @@ jobs:
           micromamba info
 
       - name: pylint
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.13'
         shell: bash
         run: |
           micromamba run -n test pylint rioxarray/
 
       - name: mypy
         shell: bash
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.13'
         run: |
           micromamba run -n test mypy rioxarray/
 
@@ -185,7 +183,7 @@ jobs:
         run: |
           micromamba run -n test sphinx-build -b html docs/ docs/_build/
 
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
 
 
   test_latest:
@@ -193,17 +191,17 @@ jobs:
     name: Test latest dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Conda
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@v3
         with:
           # https://github.com/mamba-org/setup-micromamba/issues/225
           micromamba-version: 1.5.10-0
           init-shell: bash
           environment-name: test
           create-args: >-
-            python=3.12
+            python=3.13
             proj
             libgdal-core
             libgdal-netcdf

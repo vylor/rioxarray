@@ -3,10 +3,27 @@ History
 
 Latest
 ------
-- ENH: Add read support for Zarr spatial and proj conventions (pull #900)
-- ENH: Add `convention` option to `set_options()` for future multi-convention support (pull #899)
-- REF: Extract CF convention logic to `_convention/cf.py` module (pull #899)
 
+
+0.24.0
+------
+- DEP: Update supported Python (3.13+), GDAL (3.10+), pyproj (3.7+), numpy (2.1+) versions (#948)
+- BUG: Raise informative ``CoordinateDimensionError`` when spatial coordinates
+  are not 1-dimensional and fix ``rio.width``/``rio.height`` with 2D
+  coordinates, which also fixes the output size of ``rio.reproject`` with
+  ``src_geoloc_array`` (issue #848)
+- BUG: Use ``@`` for affine matrix multiplication and require rasterio>=1.5.1 and affine>=3 (#937)
+
+0.23.0
+------
+- ENH: Add write support for Zarr spatial and proj conventions
+
+0.22.0
+------
+- ENH: Add read support for Zarr spatial and proj conventions (#900)
+- ENH: Add `convention` option to `set_options()` for future multi-convention support (#899)
+- REF: Extract CF convention logic to `_convention/cf.py` module (#899)
+- DEP: pin xarray 2026.2+ (#907)
 
 0.21.0
 ------
@@ -46,7 +63,7 @@ Latest
 - BUG:merge: Fix merging masked and scaled data (issue #814)
 - BUG: Fix chunk arguments for normalize_chunks (pull #820)
 - BUG: Squeeze when using interpolate_na with extra dim (pull #810)
-* BUG: Properly handle encoding/decoding scales and offsets by (pull #821)
+- BUG: Properly handle encoding/decoding scales and offsets by (pull #821)
 - DOC: Clearer coordinate docstring for `open_rasterio` (pull #811)
 
 0.17.0

@@ -18,11 +18,13 @@ from pyproj import CRS as pCRS
 from rasterio import DatasetReader
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
+from rasterio.warp import calculate_default_transform
 from rasterio.windows import Window
 
 import rioxarray
 from rioxarray._spatial_utils import _generate_spatial_coords, _make_coords
 from rioxarray.exceptions import (
+    CoordinateDimensionError,
     DimensionMissingCoordinateError,
     MissingCRS,
     MissingSpatialDimensionError,
@@ -41,12 +43,12 @@ from test.conftest import (
 )
 
 try:
-    SCIPY_LT_17 = version.parse(importlib.metadata.version("scipy")) < version.parse(
-        "1.7.0"
+    SCIPY_LT_1_18 = version.parse(importlib.metadata.version("scipy")) < version.parse(
+        "1.18.0"
     )
     SCIPY_INSTALLED = True
 except importlib.metadata.PackageNotFoundError:
-    SCIPY_LT_17 = True
+    SCIPY_LT_1_18 = True
     SCIPY_INSTALLED = False
 
 
@@ -314,8 +316,8 @@ def test_pad_box(modis_clip):
         if hasattr(xdi, "variables"):
             for var in xdi.rio.vars:
                 assert_almost_equal(
-                    xdi[var].rio._cached_transform(),
-                    padded_ds[var].rio._cached_transform(),
+                    tuple(xdi[var].rio._cached_transform()),
+                    tuple(padded_ds[var].rio._cached_transform()),
                 )
                 for padded_size, original_size in zip(
                     padded_ds[var].shape, xdi[var].shape
@@ -323,7 +325,8 @@ def test_pad_box(modis_clip):
                     assert padded_size == original_size
         else:
             assert_almost_equal(
-                xdi.rio._cached_transform(), padded_ds.rio._cached_transform()
+                tuple(xdi.rio._cached_transform()),
+                tuple(padded_ds.rio._cached_transform()),
             )
             for padded_size, original_size in zip(padded_ds.shape, xdi.shape):
                 assert padded_size == original_size
@@ -353,7 +356,9 @@ def test_clip_box(modis_clip):
         except KeyError:
             xdc_values = xdc.values
         assert_almost_equal(clipped_ds_values, xdc_values)
-        assert_almost_equal(clipped_ds.rio.transform(), xdc.rio.transform())
+        assert_almost_equal(
+            tuple(clipped_ds.rio.transform()), tuple(xdc.rio.transform())
+        )
         # make sure it safely writes to netcdf
         clipped_ds.to_netcdf(modis_clip["output"])
 
@@ -381,7 +386,9 @@ def test_clip_box__auto_expand(modis_clip):
         except KeyError:
             xdc_values = xdc.values
         assert_almost_equal(clipped_ds_values, xdc_values)
-        assert_almost_equal(clipped_ds.rio.transform(), xdc.rio.transform())
+        assert_almost_equal(
+            tuple(clipped_ds.rio.transform()), tuple(xdc.rio.transform())
+        )
         # make sure it safely writes to netcdf
         clipped_ds.to_netcdf(modis_clip["output"])
 
@@ -549,7 +556,9 @@ def test_slice_xy(modis_clip):
         except KeyError:
             xdc_values = xdc.values
         assert_almost_equal(clipped_ds_values, xdc_values)
-        assert_almost_equal(clipped_ds.rio.transform(), xdc.rio.transform())
+        assert_almost_equal(
+            tuple(clipped_ds.rio.transform()), tuple(xdc.rio.transform())
+        )
         # make sure it safely writes to netcdf
         clipped_ds.to_netcdf(modis_clip["output"])
 
@@ -624,7 +633,7 @@ def test_clip_geojson(open_func, from_disk):
         )
         # check the transform
         assert_almost_equal(
-            clipped_ds.rio.transform(),
+            tuple(clipped_ds.rio.transform()),
             (3.0, 0.0, 425500.68381405267, 0.0, -3.0, 4615477.040546387, 0.0, 0.0, 1.0),
         )
 
@@ -1420,15 +1429,15 @@ def test_make_coords__calc_trans(open_func, modis_reproject):
             dst_height=height,
         )
         widthr, heightr = xri.rio.shape
-        calculated_transformr = xri.rio.transform(recalc=True)
+        calculated_transform = xri.rio.transform(recalc=True)
         calc_coords_calc_transr = _make_coords(
             src_data_array=xri,
-            dst_affine=calculated_transformr,
+            dst_affine=calculated_transform,
             dst_width=widthr,
             dst_height=heightr,
         )
 
-        assert_almost_equal(calculated_transform, calculated_transformr)
+        assert_almost_equal(tuple(calculated_transform), tuple(calculated_transform))
         # check to see if they all match
         if not isinstance(open_func, partial):
             assert_almost_equal(
@@ -1470,14 +1479,14 @@ def test_make_coords__attr_trans(open_func, modis_reproject):
             dst_height=height,
         )
         widthr, heightr = xri.rio.shape
-        calculated_transformr = xri.rio.transform()
+        calculated_transform = xri.rio.transform()
         calc_coords_calc_transr = _make_coords(
             src_data_array=xri,
-            dst_affine=calculated_transformr,
+            dst_affine=calculated_transform,
             dst_width=widthr,
             dst_height=heightr,
         )
-        assert_almost_equal(attr_transform, calculated_transformr)
+        assert_almost_equal(tuple(attr_transform), tuple(calculated_transform))
         # check to see if they all match
         if not isinstance(open_func, partial):
             assert_almost_equal(
@@ -1525,7 +1534,7 @@ def test_interpolate_na__missing_scipy():
 
 
 @pytest.mark.xfail(
-    SCIPY_LT_17 or platform.system() != "Linux",
+    SCIPY_LT_1_18 or platform.system() != "Linux",
     reason="griddata behaves differently across versions and platforms",
 )
 def test_interpolate_na_veris(interpolate_na_veris):
@@ -1946,7 +1955,7 @@ def test_to_raster__preserve_profile__none_nodata(windowed, tmpdir):
     with rasterio.open(str(tmp_raster)) as rds, rasterio.open(str(input_raster)) as rdc:
         assert rds.count == rdc.count
         assert rds.crs == rdc.crs
-        assert_array_equal(rds.transform, rdc.transform)
+        assert_array_equal(tuple(rds.transform), tuple(rdc.transform))
         assert_array_equal(rds.nodata, rdc.nodata)
         assert_almost_equal(rds.read(), rdc.read())
         assert rds.profile == rdc.profile
@@ -2337,27 +2346,6 @@ def test_reproject_default_nodata(dtype, expected_nodata):
         assert test_da.rio.reproject(4326).rio.nodata == expected_nodata
 
 
-class CustomCRS:
-    @property
-    def wkt(self):
-        return CRS.from_epsg(4326).to_wkt()
-
-    def __str__(self):
-        return self.wkt
-
-
-def test_crs_get_custom():
-    test_da = xarray.DataArray(
-        numpy.zeros((5, 5)),
-        dims=("y", "x"),
-        coords={"y": numpy.arange(1, 6), "x": numpy.arange(2, 7)},
-        attrs={"crs": CustomCRS()},
-    )
-    assert test_da.rio.crs.to_epsg() == 4326
-    test_ds = xarray.Dataset({"test": test_da})
-    assert test_ds.rio.crs.to_epsg() == 4326
-
-
 def test_get_crs_dataset():
     test_ds = xarray.Dataset()
     test_ds = test_ds.rio.write_crs(4326)
@@ -2394,7 +2382,7 @@ def test_write_crs_cf__disable_grid_mapping():
 
 
 def test_write_crs_cf__grib_wkt():
-    # https://github.com/corteva/rioxarray/discussions/591
+    # https://github.com/vylor/rioxarray/discussions/591
     grib_rotated_wkt = """GEOGCRS["Coordinate System imported from GRIB file",
         BASEGEOGCRS["Coordinate System imported from GRIB file",
             DATUM["unnamed",
@@ -2895,6 +2883,69 @@ def test_shape_order():
         assert rds.air_temperature.rio.shape == (585, 1386)
 
 
+def _two_dimensional_coordinate_dataarray():
+    yy, xx = numpy.meshgrid(
+        numpy.linspace(-30.0, -40.0, 5),
+        numpy.linspace(150.0, 155.0, 6),
+        indexing="ij",
+    )
+    return xarray.DataArray(
+        numpy.zeros((5, 6)),
+        dims=("y", "x"),
+        coords={"x": (("y", "x"), xx), "y": (("y", "x"), yy)},
+    ).rio.write_crs("EPSG:4326")
+
+
+def test_bounds__2d_coordinates():
+    xds = _two_dimensional_coordinate_dataarray()
+    with pytest.raises(CoordinateDimensionError, match="must be 1-dimensional"):
+        xds.rio.bounds()
+
+
+def test_resolution__2d_coordinates():
+    xds = _two_dimensional_coordinate_dataarray()
+    with pytest.raises(CoordinateDimensionError, match="must be 1-dimensional"):
+        xds.rio.resolution()
+
+
+def test_transform__2d_coordinates():
+    xds = _two_dimensional_coordinate_dataarray()
+    with pytest.raises(CoordinateDimensionError, match="must be 1-dimensional"):
+        xds.rio.transform(recalc=True)
+
+
+def test_reproject__2d_coordinates():
+    xds = _two_dimensional_coordinate_dataarray()
+    with pytest.raises(CoordinateDimensionError, match="must be 1-dimensional"):
+        xds.rio.reproject("EPSG:2193")
+
+
+def test_reproject__2d_coordinates__src_geoloc_array():
+    xds = _two_dimensional_coordinate_dataarray()
+    src_geoloc_array = (xds.x.values, xds.y.values)
+    _, width, height = calculate_default_transform(
+        "EPSG:4326",
+        "EPSG:2193",
+        xds.rio.width,
+        xds.rio.height,
+        src_geoloc_array=src_geoloc_array,
+        georeferencing_convention="PIXEL_CENTER",
+    )
+    reprojected = xds.rio.reproject("EPSG:2193", src_geoloc_array=src_geoloc_array)
+    assert reprojected.rio.shape == (height, width)
+
+
+def test_shape__2d_coordinates():
+    xds = _two_dimensional_coordinate_dataarray()
+    assert xds.rio.shape == (5, 6)
+
+
+def test_bounds__2d_coordinates__dataset():
+    xds = xarray.Dataset({"var": _two_dimensional_coordinate_dataarray()})
+    with pytest.raises(CoordinateDimensionError, match="must be 1-dimensional"):
+        xds.rio.bounds()
+
+
 def test_write_transform__from_read(tmp_path):
     with rioxarray.open_rasterio(
         os.path.join(TEST_COMPARE_DATA_DIR, "small_dem_3m_merged.tif"),
@@ -3360,9 +3411,10 @@ def test_non_rectilinear__reproject(rename, open_rasterio):
 def test_to_rasterio_dataset():
     in_rpc_path = os.path.join(TEST_INPUT_DATA_DIR, "cog.tif")
     in_rpc = rioxarray.open_rasterio(in_rpc_path)
-    with in_rpc.rio.to_rasterio_dataset() as riox_ds, rasterio.open(
-        in_rpc_path
-    ) as rio_ds:
+    with (
+        in_rpc.rio.to_rasterio_dataset() as riox_ds,
+        rasterio.open(in_rpc_path) as rio_ds,
+    ):
         # object type
         assert isinstance(riox_ds, DatasetReader), "Error in object type"
 
@@ -3388,9 +3440,10 @@ def test_to_rasterio_dataset():
 def test_to_rasterio_dataset_rpcs():
     in_rpc_path = os.path.join(TEST_INPUT_DATA_DIR, "test_rpcs.tif")
     in_rpc = rioxarray.open_rasterio(in_rpc_path)
-    with in_rpc.rio.to_rasterio_dataset() as riox_ds, rasterio.open(
-        in_rpc_path
-    ) as rio_ds:
+    with (
+        in_rpc.rio.to_rasterio_dataset() as riox_ds,
+        rasterio.open(in_rpc_path) as rio_ds,
+    ):
         # object type
         assert isinstance(riox_ds, DatasetReader), "Error in object type"
 

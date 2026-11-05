@@ -1,6 +1,6 @@
 {
   "projectName": "rioxarray",
-  "projectOwner": "corteva",
+  "projectOwner": "vylor",
   "repoType": "github",
   "repoHost": "https://github.com",
   "files": [
@@ -461,6 +461,53 @@
       "name": "Martijn van der Marel",
       "avatar_url": "https://avatars.githubusercontent.com/u/23376251?v=4",
       "profile": "https://github.com/martijnvandermarel",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "emmanuelmathot",
+      "name": "Emmanuel Mathot",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1178857?v=4",
+      "profile": "https://github.com/emmanuelmathot",
+      "contributions": [
+        "code",
+        "doc",
+        "test"
+      ]
+    },
+    {
+      "login": "Breeze-Hu",
+      "name": "Breeze-Hu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/173059909?v=4",
+      "profile": "https://github.com/Breeze-Hu",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "VolodymyrLinuxovich",
+      "name": "Volodymyr Borysenko",
+      "avatar_url": "https://avatars.githubusercontent.com/u/86121045?v=4",
+      "profile": "https://vborysenko.com/",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "Avicennasis",
+      "name": "Léon Simmons",
+      "avatar_url": "https://avatars.githubusercontent.com/u/913872?v=4",
+      "profile": "https://github.com/Avicennasis",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "raashish1601",
+      "name": "Raashish Aggarwal",
+      "avatar_url": "https://avatars.githubusercontent.com/u/94279692?v=4",
+      "profile": "https://github.com/raashish1601",
       "contributions": [
         "bug"
       ]
