@@ -96,13 +96,19 @@ Using python::
 
     $ pytest
 
-8. Commit your changes and push your branch to GitHub (this should trigger pre-commit checks)::
+8. Check your code quality::
+
+    $ pylint rioxarray
+    $ pre-commit run --all-files
+    $ mypy rioxarray
+
+9. Commit your changes and push your branch to GitHub (this should trigger pre-commit checks)::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-9. Submit a pull request through the GitHub website.
+10. Submit a pull request through the GitHub website.
 
 
 Running tests with docker
