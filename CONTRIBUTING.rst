@@ -96,6 +96,11 @@ Using python::
 
     $ pytest
 
+8. Check your code quality::
+
+    $ pylint
+    $ pre-commit run --all-files
+
 8. Commit your changes and push your branch to GitHub (this should trigger pre-commit checks)::
 
     $ git add .
