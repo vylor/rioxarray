@@ -39,7 +39,7 @@ are passed to rasterio as GDAL creation options.
 
     with rioxarray.open_rasterio("my.tif") as xds:
         xds.rio.to_raster("out.tif")
-        xds.rio.to_raster("out_lzw.tif", compress="DEFLATE")
+        xds.rio.to_raster("out_deflate.tif", compress="DEFLATE")
 
 Cloud Optimized GeoTIFF (COG)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,7 +48,10 @@ To write a COG, use GDAL's ``COG`` driver:
 
 .. code-block:: python
 
-    xds.rio.to_raster("out_cog.tif", driver="COG")
+    import rioxarray
+
+    with rioxarray.open_rasterio("my.tif") as xds:
+        xds.rio.to_raster("out_cog.tif", driver="COG")
 
 For more examples, including writing large rasters with ``windowed=True`` or with dask,
 see :doc:`../examples/convert_to_raster`, :doc:`../examples/COG`,
@@ -67,9 +70,11 @@ and upload it when the file is closed:
 .. code-block:: python
 
     import rasterio
+    import rioxarray
 
-    with rasterio.Env(CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE="YES"):
-        xds.rio.to_raster("/vsis3/bucket/out.tif", driver="COG")
+    with rioxarray.open_rasterio("my.tif") as xds:
+        with rasterio.Env(CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE="YES"):
+            xds.rio.to_raster("/vsis3/bucket/out.tif", driver="COG")
 
 Alternatively, ``rio.to_raster`` accepts a file-like object, such as an ``io.BytesIO``
 buffer or a file opened with `fsspec <https://filesystem-spec.readthedocs.io>`__
@@ -79,6 +84,8 @@ The ``driver`` must be set explicitly because it cannot be detected from a file 
 .. code-block:: python
 
     import fsspec
+    import rioxarray
 
-    with fsspec.open("s3://bucket/out.tif", "wb") as fobj:
-        xds.rio.to_raster(fobj, driver="COG")
+    with rioxarray.open_rasterio("my.tif") as xds:
+        with fsspec.open("s3://bucket/out.tif", "wb") as fobj:
+            xds.rio.to_raster(fobj, driver="COG")
