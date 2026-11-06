@@ -40,7 +40,7 @@ from rioxarray._spatial_utils import (
     _make_dst_affine,
     _order_bounds,
 )
-from rioxarray.crs import crs_from_user_input
+from rioxarray.crs import crs_from_user_input, get_crs_repr
 from rioxarray.exceptions import (
     MissingCRS,
     NoDataInBounds,
@@ -1111,22 +1111,10 @@ class RasterArray(XRasterBase):
         uniform_ds: bool
             the dataset is uniform, meaning all contained DataArrays have the same data
         """
-
-        # Never leave CRS empty
-        if self.crs is None:
-            crs = "Undefined"
-        else:
-            from pyproj import CRS
-
-            pyproj_crs = CRS(self.crs)
-            epsg_auth = pyproj_crs.to_authority(min_confidence=100)
-            epsg_repr = f" | {':'.join(epsg_auth)}" if epsg_auth is not None else ""
-            crs = f"{pyproj_crs.name}{epsg_repr}"
-
         # Create representation dict
         # NOTE: height, width and count values are already present in the dimensions repr, so don't set them again
         repr_dict = {
-            "crs": crs,
+            "crs": get_crs_repr(self.crs),
         }
 
         # Look for least common to most common : rpcs > gcps > transform
