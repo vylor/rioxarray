@@ -1148,6 +1148,7 @@ class XRasterBase:
         dims = self._obj.sizes
 
         if self.crs is not None:
+            self.crs: CRS
             dim_unit = " (°)" if self.crs.is_geographic else " (m)"
         else:
             dim_unit = None
