@@ -73,6 +73,10 @@ Why use :func:`rioxarray.open_rasterio` instead of `xarray.open_rasterio`?
 7. `xarray.open_rasterio` is deprecated (since v0.20.0)
 
 
+See :ref:`file_io` for reading from cloud storage and for writing files
+(GeoTIFF, Cloud Optimized GeoTIFF, and cloud storage).
+
+
 Introductory Information
 --------------------------
 
@@ -80,6 +84,7 @@ Introductory Information
    :maxdepth: 1
 
    switching_from_rasterio
+   file_io
    crs_management.ipynb
    nodata_management.ipynb
    manage_information_loss.ipynb
