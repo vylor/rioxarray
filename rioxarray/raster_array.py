@@ -1110,10 +1110,15 @@ class RasterArray(XRasterBase):
             repr of a DataArray from a Dataset
         uniform_ds: bool
             the dataset is uniform, meaning all contained DataArrays have the same data
+
+        Returns
+        -------
+        list[str]:
+            Representation of the DataArray's rio accessor internals as a list of strings
         """
         # Create representation dict
         # NOTE: height, width and count values are already present in the dimensions repr, so don't set them again
-        repr_dict = {
+        repr_dict: dict[str, Any] = {
             "crs": get_crs_repr(self.crs),
         }
 
@@ -1150,7 +1155,9 @@ class RasterArray(XRasterBase):
             blockysize = None
 
         # Never leave nodata empty
-        nodata = self.encoded_nodata if self.encoded_nodata is not None else self.nodata
+        nodata: Any = (
+            self.encoded_nodata if self.encoded_nodata is not None else self.nodata
+        )
 
         if nodata is None:
             nodata = "None"
