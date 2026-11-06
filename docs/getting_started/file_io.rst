@@ -37,9 +37,9 @@ are passed to rasterio as GDAL creation options.
 
     import rioxarray
 
-    xds = rioxarray.open_rasterio("my.tif")
-    xds.rio.to_raster("out.tif")
-    xds.rio.to_raster("out_lzw.tif", compress="LZW")
+    with rioxarray.open_rasterio("my.tif") as xds:
+        xds.rio.to_raster("out.tif")
+        xds.rio.to_raster("out_lzw.tif", compress="DEFLATE")
 
 Cloud Optimized GeoTIFF (COG)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
