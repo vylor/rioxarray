@@ -4,6 +4,7 @@ to xarray datasets.
 """
 
 import os
+from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from typing import Any, Literal, Optional, Union
 from uuid import uuid4
@@ -583,3 +584,20 @@ class RasterDataset(XRasterBase):
             compute=compute,
             **profile_kwargs,
         )
+
+    def __repr__(self) -> str:
+        # Add dimension data to repr
+        repr_list = [
+            "rioxarray.RasterDataset",
+            f"Dimensions: {self._dims_unit_to_repr()}",
+            "Data variables:",
+        ]
+
+        # Retrieve data from variables
+        da_info = defaultdict(list)
+        for var in self.vars:
+            repr_list += [f"\t{var}\t{self._obj[var].rio._dims_unit_to_repr()}"]
+            da_info["crs"].append(self._obj[var].rio.crs)
+            da_info["tf"].append(self._obj[var].rio.transform())
+
+        return "\n".join(repr_list)

@@ -35,3 +35,32 @@ def crs_from_user_input(crs_input: Any) -> rasterio.crs.CRS:
     # use pyproj for edge cases
     crs = CRS.from_user_input(crs_input)
     return rasterio.crs.CRS.from_wkt(crs.to_wkt())
+
+
+def get_crs_repr(crs_input: Any) -> str:
+    """
+    Get CRS representation: 'CRS name | EPSG:code' (if existing)
+
+    Parameters
+    ----------
+    crs_input: Any
+        Input to create a CRS.
+
+    Returns
+    -------
+    str:
+
+    """
+    # If no CRS is given (i.e. the raster has no CRS), return "Undefined" by convention
+    if crs_input is None:
+        return "Undefined"
+
+    # Use Pyproj to derive a proper name and EPSG:code, as rasterio's CRS object is simplified
+    pyproj_crs = CRS(crs_input)
+
+    # Get the EPSG:Code
+    epsg_auth = pyproj_crs.to_authority(min_confidence=100)
+    epsg_repr = f" | {':'.join(epsg_auth)}" if epsg_auth is not None else ""
+
+    # Assemble the repr
+    return f"{pyproj_crs.name}{epsg_repr}"
