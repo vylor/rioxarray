@@ -492,14 +492,16 @@ class RasterDataset(XRasterBase):
             the dataset rather than recalculating it.
             Default is True.
         lock: boolean or Lock, optional
-            Lock to use to write data using dask.
-            If not supplied, it will use a single process for writing.
+            Lock to use to write data using dask. Supply True or a lock object
+            to enable dask writing of a dask-backed array. If None or False,
+            the call writes data synchronously, even for dask-backed input.
         compute: bool, optional
-            If True and data is a dask array, then compute and save
-            the data immediately. If False, return a dask Delayed object.
-            Call ".compute()" on the Delayed object to compute the result
-            later. Call ``dask.compute(delayed1, delayed2)`` to save
-            multiple delayed files at once. Default is True.
+            If the data is a dask array and a lock is supplied, True writes
+            the data immediately and False returns a dask collection of write
+            tasks. Call ".compute()" on that collection later, or use
+            ``dask.compute(write1, write2)`` to write multiple files at once.
+            Without both dask-backed data and a lock, data is written
+            synchronously regardless of this option. Default is True.
         **profile_kwargs
             Additional keyword arguments to pass into writing the raster. The
             nodata, transform, crs, count, width, and height attributes
@@ -507,9 +509,15 @@ class RasterDataset(XRasterBase):
 
         Returns
         -------
-        :obj:`dask.Delayed` | :obj:`dask.Array` | None:
-            If the data array is a dask array and compute
-            is True. Otherwise None is returned.
+        Dask collection or None:
+            A dask collection of write tasks if the data is dask-backed,
+            a lock is supplied, and compute is False. Otherwise None is returned
+            after writing the data immediately.
+
+        Notes
+        -----
+        Even with compute=False, the output file and its metadata are created
+        or overwritten immediately. Only writing the array data is deferred.
 
         """
         # pylint: disable=too-many-locals

@@ -276,14 +276,16 @@ class RasterioWriter:
             If True and the data array is not a dask array, it will write
             the data to disk using rasterio windows.
         lock: boolean or Lock, optional
-            Lock to use to write data using dask.
-            If not supplied, it will use a single process.
+            Supply True or a lock object to enable dask writing of dask-backed
+            data. If None or False, the call writes synchronously, even for
+            dask-backed input.
         compute: bool
-            If True (default) and data is a dask array, then compute and save
-            the data immediately. If False, return a dask Delayed object.
-            Call ".compute()" on the Delayed object to compute the result
-            later. Call ``dask.compute(delayed1, delayed2)`` to save
-            multiple delayed files at once.
+            With dask-backed data and a lock, True (default) writes immediately
+            and False returns a dask collection of write tasks. Call ".compute()"
+            on the collection later, or use ``dask.compute(write1, write2)``.
+            Otherwise data is written immediately and None is returned,
+            regardless of compute. The output file and metadata are created
+            or overwritten before any deferred data writing.
         dtype: numpy.dtype
             Numpy-compliant dtype used to save raster. If data is not already
             represented by this dtype in memory it is recast. dtype='complex_int16'
