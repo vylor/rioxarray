@@ -20,6 +20,7 @@ from pyproj.database import query_utm_crs_info
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.rpc import RPC
+from rasterio.transform import array_bounds
 
 from rioxarray._convention._core import (
     _get_convention,
@@ -851,6 +852,18 @@ class XRasterBase:
         left, bottom, right, top: float
             Outermost coordinates of the `xarray.DataArray` | `xarray.Dataset`.
         """
+        transform = self._cached_transform()
+        if transform is not None and (
+            not transform.is_rectilinear
+            or _affine_has_rotation(transform)
+            # Compare each cross term to the size of its own pixel axis.
+            # Tiny pixels can still have a full quarter-turn. Rounding noise
+            # on a diagonal grid should leave sliced axis coordinates usable.
+            or abs(transform.b) > 1e-9 * abs(transform.e)
+            or abs(transform.d) > 1e-9 * abs(transform.a)
+        ):
+            return array_bounds(self.height, self.width, transform)
+
         minx, miny, maxx, maxy = self._unordered_bounds(recalc=recalc)
         resolution_x, resolution_y = self.resolution(recalc=recalc)
         return _order_bounds(

@@ -3,6 +3,7 @@ History
 
 Latest
 ------
+- BUG: Compute ``rio.bounds()`` from the raster footprint on rotated and sheared grids (#847).
 
 
 0.24.0
