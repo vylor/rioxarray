@@ -3,6 +3,8 @@ History
 
 Latest
 ------
+- DOC: Clarify deferred ``rio.to_raster`` lock requirements and return behavior,
+  including output file creation before computing writes (issue #664)
 
 
 0.24.0
