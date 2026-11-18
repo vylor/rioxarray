@@ -1005,7 +1005,7 @@ class XRasterBase:
 
         Parameters
         ----------
-        gcp: list of :obj:`rasterio.control.GroundControlPoint`
+        gcps: list of :obj:`rasterio.control.GroundControlPoint`
             The Ground Control Points to integrate to the dataset.
         gcp_crs: str, :obj:`rasterio.crs.CRS`, or dict
             Coordinate reference system for the GCPs.
