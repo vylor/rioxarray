@@ -189,12 +189,12 @@
         <span class="s2">"../../test/test_data/compare/small_dem_3m_merged.tif"</span><span class="p">,</span>
         <span class="n">chunks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">lock</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="c1"># lock=Lock("rio-read", client=client), # when too many file handles open</span>
+        <span class="c1"># lock=Lock("rio-read"), # when too many file handles open</span>
     <span class="p">)</span>
     <span class="n">xds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">to_raster</span><span class="p">(</span>
         <span class="s2">"dask_multiworker.tif"</span><span class="p">,</span>
         <span class="n">tiled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">lock</span><span class="o">=</span><span class="n">Lock</span><span class="p">(</span><span class="s2">"rio"</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">),</span>
+        <span class="n">lock</span><span class="o">=</span><span class="n">Lock</span><span class="p">(</span><span class="s2">"rio"</span><span class="p">),</span>
     <span class="p">)</span>
 </pre></div>
 </div>
