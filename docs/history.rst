@@ -3,7 +3,7 @@ History
 
 Latest
 ------
-
+- DOC: pass right arguments to Lock (#962)
 
 0.24.0
 ------
