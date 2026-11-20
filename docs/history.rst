@@ -14,6 +14,8 @@ Latest
   ``src_geoloc_array`` (issue #848)
 - BUG: Use ``@`` for affine matrix multiplication and require rasterio>=1.5.1 and affine>=3 (#937)
 
+- DOC: Add file I/O page with writing files section (issue #584)
+
 0.23.0
 ------
 - ENH: Add write support for Zarr spatial and proj conventions
