@@ -40,7 +40,7 @@ from rioxarray._spatial_utils import (
     _make_dst_affine,
     _order_bounds,
 )
-from rioxarray.crs import crs_from_user_input
+from rioxarray.crs import crs_from_user_input, get_crs_repr
 from rioxarray.exceptions import (
     MissingCRS,
     NoDataInBounds,
@@ -1099,3 +1099,85 @@ class RasterArray(XRasterBase):
             self.to_raster(memfile.name)
             with memfile.open() as src_ds:
                 yield src_ds
+
+    def _to_repr(self) -> list[str]:
+        """
+        Function representing the DataArray. Not set directly in __repr__ as it is used also in Datasets.
+
+        Parameters
+        ----------
+        from_ds: bool
+            repr of a DataArray from a Dataset
+        uniform_ds: bool
+            the dataset is uniform, meaning all contained DataArrays have the same data
+
+        Returns
+        -------
+        list[str]:
+            Representation of the DataArray's rio accessor internals as a list of strings
+        """
+        # Create representation dict
+        # NOTE: height, width and count values are already present in the dimensions repr, so don't set them again
+        repr_dict: dict[str, Any] = {
+            "crs": get_crs_repr(self.crs),
+        }
+
+        # Look for least common to most common : rpcs > gcps > transform
+        # Only display one of them
+        # It makes no sense to mix rpcs with gcps with transform
+        rpcs = self.get_rpcs()
+
+        if not rpcs:
+            gcps = self.get_gcps()
+            if not gcps:
+                geo_dict = {
+                    "transform": f"\n{self.transform()}",
+                    "bounds": self.bounds(),
+                }
+            else:
+                # GCPs can be verbose -> grab the first one
+                first_gcp = gcps[0]
+                geo_dict = {
+                    "gcps": f"(col: {first_gcp.col}, row:: {first_gcp.row}) -> (x: {first_gcp.x:0.3f}, y: {first_gcp.y:0.3f}, z: {first_gcp.z:0.3f}); ..."
+                }
+        else:
+            geo_dict = {"rpcs": rpcs}
+
+        repr_dict.update(geo_dict)
+
+        # Manage chunks
+        try:
+            pref_chunks = self._obj.encoding["preferred_chunks"]
+            blockxsize = pref_chunks["x"]
+            blockysize = pref_chunks["y"]
+        except KeyError:
+            blockxsize = None
+            blockysize = None
+
+        # Never leave nodata empty
+        nodata: Any = (
+            self.encoded_nodata if self.encoded_nodata is not None else self.nodata
+        )
+
+        if nodata is None:
+            nodata = "None"
+
+        repr_dict.update(
+            {
+                "nodata": nodata,
+                "blockxsize": blockxsize,
+                "blockysize": blockysize,
+                "dtype": self._obj.encoding.get("rasterio_dtype"),
+            }
+        )
+
+        # Prune none values
+        return [f"{key}: {val}" for key, val in repr_dict.items() if val is not None]
+
+    def __repr__(self) -> str:
+        repr_list = [
+            f"rioxarray.RasterDataArray: ({self._dims_unit_to_repr()})",
+            "Profile:",
+        ] + ["\t\t\t".join(f"\t{val}".splitlines(True)) for val in self._to_repr()]
+
+        return "\n".join(repr_list)
