@@ -5,6 +5,7 @@ import pyproj
 import xarray as xr
 from affine import Affine
 from rasterio.crs import CRS
+from rasterio.enums import WktVersion
 
 import rioxarray  # noqa: F401
 from rioxarray import set_options
@@ -23,7 +24,7 @@ def _create_zarr_array_with_proj():
         },
     )
     data.attrs["zarr_conventions"] = [zarr.PROJ_CONVENTION]
-    data.attrs["proj:wkt2"] = CRS.from_epsg(4326).to_wkt()
+    data.attrs["proj:wkt2"] = CRS.from_epsg(4326).to_wkt(version=WktVersion.WKT2_2019)
     return data
 
 
@@ -54,7 +55,7 @@ def _create_zarr_array_with_both():
         },
     )
     data.attrs["zarr_conventions"] = [zarr.PROJ_CONVENTION, zarr.SPATIAL_CONVENTION]
-    data.attrs["proj:wkt2"] = CRS.from_epsg(32618).to_wkt()
+    data.attrs["proj:wkt2"] = CRS.from_epsg(32618).to_wkt(version=WktVersion.WKT2_2019)
     data.attrs["spatial:transform"] = [10.0, 0.0, 500000.0, 0.0, -10.0, 4500000.0]
     data.attrs["spatial:dimensions"] = ["lat", "lon"]
     return data
@@ -166,7 +167,7 @@ def test_priority_zarr_over_cf():
 
     # Zarr convention (different CRS)
     data.attrs["zarr_conventions"] = [zarr.PROJ_CONVENTION]
-    data.attrs["proj:wkt2"] = CRS.from_epsg(32618).to_wkt()
+    data.attrs["proj:wkt2"] = CRS.from_epsg(32618).to_wkt(version=WktVersion.WKT2_2019)
 
     # With Zarr setting, should prefer Zarr CRS
     with set_options(convention=Convention.ZARR):
@@ -223,7 +224,9 @@ def test_write_crs__zarr_convention():
     result = data.rio.write_crs("EPSG:4326", convention=Convention.ZARR)
     assert zarr.has_convention_declared(result.attrs, "proj:") is True
     assert "proj:wkt2" in result.attrs
-    assert CRS.from_wkt(result.attrs["proj:wkt2"]) == CRS.from_epsg(4326)
+    assert result.attrs["proj:wkt2"] == CRS.from_epsg(4326).to_wkt(
+        version=WktVersion.WKT2_2019
+    )
 
 
 def test_write_transform__zarr_convention():
