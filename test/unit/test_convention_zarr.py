@@ -213,6 +213,42 @@ def test_write_crs():
     assert CRS.from_wkt(result.attrs["proj:wkt2"]) == crs
 
 
+def test_write_crs__dataset():
+    data = xr.Dataset(
+        data_vars={
+            "spatial_data": xr.DataArray(np.random.rand(10, 20), dims=["y", "x"]),
+            "random_data": xr.DataArray(np.random.rand(10), dims=["p"]),
+        }
+    )
+    crs = CRS.from_epsg(4326)
+    result = ZarrConvention.write_crs(data, crs=crs)
+    assert zarr.has_convention_declared(result.attrs, "proj:") is True
+    assert "proj:wkt2" in result.attrs
+    assert CRS.from_wkt(result.attrs["proj:wkt2"]) == crs
+    for variable in result.data_vars.values():
+        assert not any(attr for attr in variable.attrs if attr.startswith("proj:"))
+
+
+def test_write_crs__dataset__propagate_to_variables():
+    data = xr.Dataset(
+        data_vars={
+            "spatial_data": xr.DataArray(np.random.rand(10, 20), dims=["y", "x"]),
+            "random_data": xr.DataArray(np.random.rand(10), dims=["p"]),
+        }
+    )
+    crs = CRS.from_epsg(4326)
+    result = ZarrConvention.write_crs(data, crs=crs, propagate_to_variables=True)
+    assert zarr.has_convention_declared(result.attrs, "proj:") is True
+    assert "proj:wkt2" in result.attrs
+    assert CRS.from_wkt(result.attrs["proj:wkt2"]) == crs
+    for variable in result.data_vars.values():
+        if variable.name == "random_data":
+            assert not any(attr for attr in variable.attrs if attr.startswith("proj:"))
+        else:
+            assert "proj:wkt2" in variable.attrs
+            assert CRS.from_wkt(variable.attrs["proj:wkt2"]) == crs
+
+
 def test_write_crs__ignores_grid_mapping_name():
     """Test that grid_mapping_name kwarg (CF-specific) is silently ignored."""
     data = xr.DataArray(np.random.rand(10, 10), dims=["y", "x"])
@@ -228,7 +264,6 @@ def test_write_crs__ignores_grid_mapping_name():
 
 
 def test_write_transform():
-    """Test writing transform writes all spatial: attributes."""
     data = xr.DataArray(np.random.rand(10, 20), dims=["y", "x"])
     transform = Affine(1.0, 0.0, 100.0, 0.0, -1.0, 200.0)
     result = ZarrConvention.write_transform(data, transform=transform)
@@ -241,10 +276,65 @@ def test_write_transform():
 
 
 def test_write_transform__ignores_grid_mapping_name():
-    """Test that grid_mapping_name kwarg (CF-specific) is silently ignored."""
     data = xr.DataArray(np.random.rand(10, 20), dims=["y", "x"])
     transform = Affine(1.0, 0.0, 100.0, 0.0, -1.0, 200.0)
     result = ZarrConvention.write_transform(
         data, transform=transform, grid_mapping_name="spatial_ref"
     )
     assert "spatial:transform" in result.attrs
+
+
+def test_write_transform__dataset():
+    data = xr.Dataset(
+        data_vars={
+            "spatial_data": xr.DataArray(np.random.rand(10, 20), dims=["y", "x"]),
+            "random_data": xr.DataArray(np.random.rand(10), dims=["p"]),
+        }
+    )
+    transform = Affine(1.0, 0.0, 100.0, 0.0, -1.0, 200.0)
+    result = ZarrConvention.write_transform(data, transform=transform)
+    assert zarr.has_convention_declared(result.attrs, "spatial:") is True
+    assert result.attrs["spatial:transform"] == [1.0, 0.0, 100.0, 0.0, -1.0, 200.0]
+    assert result.attrs["spatial:dimensions"] == ["y", "x"]
+    assert result.attrs["spatial:shape"] == [10, 20]
+    assert "spatial:bbox" in result.attrs
+    assert result.attrs["spatial:registration"] == "pixel"
+    for variable in result.data_vars.values():
+        assert not any(attr for attr in variable.attrs if attr.startswith("spatial:"))
+
+
+def test_write_transform__dataset__propagate_to_variables():
+    data = xr.Dataset(
+        data_vars={
+            "spatial_data": xr.DataArray(np.random.rand(10, 20), dims=["y", "x"]),
+            "random_data": xr.DataArray(np.random.rand(10), dims=["p"]),
+        }
+    )
+    transform = Affine(1.0, 0.0, 100.0, 0.0, -1.0, 200.0)
+    result = ZarrConvention.write_transform(
+        data, transform=transform, propagate_to_variables=True
+    )
+    assert zarr.has_convention_declared(result.attrs, "spatial:") is True
+    assert result.attrs["spatial:transform"] == [1.0, 0.0, 100.0, 0.0, -1.0, 200.0]
+    assert result.attrs["spatial:dimensions"] == ["y", "x"]
+    assert result.attrs["spatial:shape"] == [10, 20]
+    assert "spatial:bbox" in result.attrs
+    assert result.attrs["spatial:registration"] == "pixel"
+    for variable in result.data_vars.values():
+        if variable.name == "random_data":
+            assert not any(
+                attr for attr in variable.attrs if attr.startswith("spatial:")
+            )
+        else:
+            assert variable.attrs["spatial:transform"] == [
+                1.0,
+                0.0,
+                100.0,
+                0.0,
+                -1.0,
+                200.0,
+            ]
+            assert variable.attrs["spatial:dimensions"] == ["y", "x"]
+            assert variable.attrs["spatial:shape"] == [10, 20]
+            assert "spatial:bbox" in variable.attrs
+            assert variable.attrs["spatial:registration"] == "pixel"
