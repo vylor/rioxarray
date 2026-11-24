@@ -12,6 +12,7 @@ import rasterio.crs
 import rasterio.transform
 import xarray
 from affine import Affine
+from rasterio.enums import WktVersion
 
 from rioxarray.crs import crs_from_user_input
 
@@ -326,7 +327,7 @@ class ZarrConvention:
             Object with CRS written
         """
         add_convention_declaration(obj.attrs, "proj:")
-        obj.attrs["proj:wkt2"] = crs.to_wkt()
+        obj.attrs["proj:wkt2"] = crs.to_wkt(version=WktVersion.WKT2_2019)
         return obj
 
     @classmethod
