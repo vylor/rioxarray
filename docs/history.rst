@@ -5,7 +5,6 @@ History
 ------
 - ENH: Add ``propagate_to_variables`` option to ``ZarrConvention.write_crs`` and ``ZarrConvention.write_transform`` (#965)
 - BUG: Write WKT2 to Zarr (#961)
-- DOC: pass right arguments to Lock (#962)
 
 0.24.0
 ------
