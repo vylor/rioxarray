@@ -257,11 +257,14 @@ class XRasterBase:
         self,
         input_crs: Optional[Any] = None,
         grid_mapping_name: Optional[str] = None,
+        propagate_to_variables: bool = False,
         convention: Optional[Convention] = None,
         inplace: bool = False,
     ) -> Union[xarray.Dataset, xarray.DataArray]:
         """
         Write the CRS to the dataset using the specified convention.
+
+        .. versionadded:: 0.25.0 propagate_to_variables
 
         .. warning:: When using CF convention, the grid_mapping attribute is written to the encoding.
 
@@ -272,6 +275,9 @@ class XRasterBase:
         grid_mapping_name: str, optional
             Name of the grid_mapping coordinate to store the CRS information in.
             Only used with CF convention. Default is the grid_mapping name of the dataset.
+        propagate_to_variables : bool, default False
+            If True, propagate the CRS to dataset data variables with spatial dimensions
+            when using the Zarr convention.
         convention: Convention, optional
             Convention to use for writing CRS. If None, uses the global default
             from set_options(). Currently only CF convention is supported.
@@ -313,6 +319,7 @@ class XRasterBase:
             data_obj,
             crs=data_obj.rio.crs,
             grid_mapping_name=grid_mapping_name,
+            propagate_to_variables=propagate_to_variables,
         )
 
     def estimate_utm_crs(self, datum_name: str = "WGS 84") -> rasterio.crs.CRS:
@@ -367,11 +374,13 @@ class XRasterBase:
         self,
         transform: Optional[Affine] = None,
         grid_mapping_name: Optional[str] = None,
+        propagate_to_variables: bool = False,
         convention: Optional[Convention] = None,
         inplace: bool = False,
     ) -> Union[xarray.Dataset, xarray.DataArray]:
         """
         .. versionadded:: 0.0.30
+        .. versionadded:: 0.25.0 propagate_to_variables
 
         Write the transform to the dataset using the specified convention.
 
@@ -387,7 +396,10 @@ class XRasterBase:
             Only used with CF convention. Default is the grid_mapping name of the dataset.
         convention: Convention, optional
             Convention to use for writing transform. If None, uses the global default
-            from set_options(). Currently only CF convention is supported.
+            from set_options().
+        propagate_to_variables : bool, default False
+            If True, propagate the transform to dataset data variables with spatial dimensions
+            when using the Zarr convention.
         inplace: bool, optional
             If True, it will write to the existing dataset. Default is False.
 
@@ -409,6 +421,7 @@ class XRasterBase:
             data_obj,
             transform=transform,
             grid_mapping_name=grid_mapping_name,
+            propagate_to_variables=propagate_to_variables,
         )
 
     def transform(self, recalc: bool = False) -> Affine:
@@ -905,6 +918,7 @@ class XRasterBase:
                     ),
                     self.transform(recalc=True),
                 ),
+                propagate_to_variables=True,
                 inplace=True,
             )
         )
@@ -955,7 +969,7 @@ class XRasterBase:
             self._obj.sel({self.x_dim: x_slice, self.y_dim: y_slice})
             .copy()  # this is to prevent sharing coordinates with the original dataset
             .rio.set_spatial_dims(x_dim=self.x_dim, y_dim=self.y_dim, inplace=True)
-            .rio.write_transform(inplace=True)
+            .rio.write_transform(inplace=True, propagate_to_variables=True)
         )
         return subset
 

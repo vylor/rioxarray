@@ -14,6 +14,7 @@ import xarray
 from affine import Affine
 from rasterio.enums import WktVersion
 
+from rioxarray._spatial_utils import _has_spatial_dims
 from rioxarray.crs import crs_from_user_input
 
 # Convention identifiers
@@ -306,6 +307,7 @@ class ZarrConvention:
         cls,
         obj: Union[xarray.Dataset, xarray.DataArray],
         crs: rasterio.crs.CRS,
+        propagate_to_variables: bool = False,
         **kwargs,
     ) -> Union[xarray.Dataset, xarray.DataArray]:
         """
@@ -317,6 +319,8 @@ class ZarrConvention:
             Object to write CRS to
         crs : rasterio.crs.CRS
             CRS to write
+        propagate_to_variables : bool, default False
+            If True, propagate the CRS to dataset data variables with spatial dimensions.
         **kwargs
             Additional convention-specific parameters (e.g., grid_mapping_name for CF;
             silently ignored here)
@@ -328,14 +332,25 @@ class ZarrConvention:
         """
         add_convention_declaration(obj.attrs, "proj:")
         obj.attrs["proj:wkt2"] = crs.to_wkt(version=WktVersion.WKT2_2019)
+        if not propagate_to_variables:
+            return obj
+        for data_var in getattr(obj, "data_vars", ()):
+            if not _has_spatial_dims(obj, var=data_var):
+                continue
+            cls.write_crs(
+                obj[data_var],
+                crs=crs,
+                **kwargs,
+            )
         return obj
 
     @classmethod
-    def write_transform(  # pylint: disable=unused-argument
+    def write_transform(
         cls,
         obj: Union[xarray.Dataset, xarray.DataArray],
         *,
         transform: Affine,
+        propagate_to_variables: bool = False,
         **kwargs,
     ) -> Union[xarray.Dataset, xarray.DataArray]:
         """
@@ -347,6 +362,8 @@ class ZarrConvention:
             Object to write transform to
         transform : affine.Affine
             Transform to write
+        propagate_to_variables : bool, default False
+            If True, propagate the transform to dataset data variables with spatial dimensions.
         **kwargs
             Additional convention-specific parameters (e.g., grid_mapping_name for CF;
             silently ignored here)
@@ -369,4 +386,14 @@ class ZarrConvention:
         )
         obj.attrs["spatial:bbox"] = [left, bottom, right, top]
         obj.attrs["spatial:registration"] = "pixel"
+        if not propagate_to_variables:
+            return obj
+        for data_var in getattr(obj, "data_vars", ()):
+            if not _has_spatial_dims(obj, var=data_var):
+                continue
+            cls.write_transform(
+                obj[data_var],
+                transform=transform,
+                **kwargs,
+            )
         return obj
