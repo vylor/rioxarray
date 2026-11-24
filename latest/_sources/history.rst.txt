@@ -1,6 +1,10 @@
 History
 =======
 
+Latest
+------
+
+
 0.25.0
 ------
 - ENH: Add ``propagate_to_variables`` option to ``ZarrConvention.write_crs`` and ``ZarrConvention.write_transform`` (#965)
