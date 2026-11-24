@@ -346,11 +346,14 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_crs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grid_mapping_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">propagate_to_variables</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">convention</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Convention</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">xarray</span><span class="o">.</span><span class="n">DataArray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Write the CRS to the dataset using the specified convention.</span>
+
+<span class="sd">        .. versionadded:: 0.25.0 propagate_to_variables</span>
 
 <span class="sd">        .. warning:: When using CF convention, the grid_mapping attribute is written to the encoding.</span>
 
@@ -361,6 +364,9 @@
 <span class="sd">        grid_mapping_name: str, optional</span>
 <span class="sd">            Name of the grid_mapping coordinate to store the CRS information in.</span>
 <span class="sd">            Only used with CF convention. Default is the grid_mapping name of the dataset.</span>
+<span class="sd">        propagate_to_variables : bool, default False</span>
+<span class="sd">            If True, propagate the CRS to dataset data variables with spatial dimensions</span>
+<span class="sd">            when using the Zarr convention.</span>
 <span class="sd">        convention: Convention, optional</span>
 <span class="sd">            Convention to use for writing CRS. If None, uses the global default</span>
 <span class="sd">            from set_options(). Currently only CF convention is supported.</span>
@@ -402,6 +408,7 @@
             <span class="n">data_obj</span><span class="p">,</span>
             <span class="n">crs</span><span class="o">=</span><span class="n">data_obj</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
             <span class="n">grid_mapping_name</span><span class="o">=</span><span class="n">grid_mapping_name</span><span class="p">,</span>
+            <span class="n">propagate_to_variables</span><span class="o">=</span><span class="n">propagate_to_variables</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -462,11 +469,13 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Affine</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grid_mapping_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">propagate_to_variables</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">convention</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Convention</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">xarray</span><span class="o">.</span><span class="n">DataArray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        .. versionadded:: 0.0.30</span>
+<span class="sd">        .. versionadded:: 0.25.0 propagate_to_variables</span>
 
 <span class="sd">        Write the transform to the dataset using the specified convention.</span>
 
@@ -482,7 +491,10 @@
 <span class="sd">            Only used with CF convention. Default is the grid_mapping name of the dataset.</span>
 <span class="sd">        convention: Convention, optional</span>
 <span class="sd">            Convention to use for writing transform. If None, uses the global default</span>
-<span class="sd">            from set_options(). Currently only CF convention is supported.</span>
+<span class="sd">            from set_options().</span>
+<span class="sd">        propagate_to_variables : bool, default False</span>
+<span class="sd">            If True, propagate the transform to dataset data variables with spatial dimensions</span>
+<span class="sd">            when using the Zarr convention.</span>
 <span class="sd">        inplace: bool, optional</span>
 <span class="sd">            If True, it will write to the existing dataset. Default is False.</span>
 
@@ -504,6 +516,7 @@
             <span class="n">data_obj</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
             <span class="n">grid_mapping_name</span><span class="o">=</span><span class="n">grid_mapping_name</span><span class="p">,</span>
+            <span class="n">propagate_to_variables</span><span class="o">=</span><span class="n">propagate_to_variables</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -1030,6 +1043,7 @@
                     <span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">recalc</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                 <span class="p">),</span>
+                <span class="n">propagate_to_variables</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
@@ -1083,7 +1097,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">sel</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">x_dim</span><span class="p">:</span> <span class="n">x_slice</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_dim</span><span class="p">:</span> <span class="n">y_slice</span><span class="p">})</span>
             <span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># this is to prevent sharing coordinates with the original dataset</span>
             <span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">set_spatial_dims</span><span class="p">(</span><span class="n">x_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_dim</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">propagate_to_variables</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">subset</span></div>
 
