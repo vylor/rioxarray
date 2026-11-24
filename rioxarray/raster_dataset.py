@@ -14,6 +14,7 @@ import xarray
 from affine import Affine
 from rasterio.enums import Resampling
 
+from rioxarray._convention._core import clean_attrs
 from rioxarray._options import SKIP_MISSING_SPATIAL_DIMS, get_option
 from rioxarray.exceptions import MissingSpatialDimensionError, RioXarrayError
 from rioxarray.rioxarray import XRasterBase, _get_spatial_dims
@@ -116,7 +117,7 @@ class RasterDataset(XRasterBase):
         :class:`xarray.Dataset`:
             The reprojected Dataset.
         """
-        resampled_dataset = xarray.Dataset(attrs=self._obj.attrs)
+        resampled_dataset = xarray.Dataset(attrs=clean_attrs(self._obj.attrs))
         for var in self.vars:
             try:
                 x_dim, y_dim = _get_spatial_dims(self._obj, var=var)
@@ -176,7 +177,7 @@ class RasterDataset(XRasterBase):
             Contains the data from the src_data_array,
             reprojected to match match_data_array.
         """
-        resampled_dataset = xarray.Dataset(attrs=self._obj.attrs)
+        resampled_dataset = xarray.Dataset(attrs=clean_attrs(self._obj.attrs))
         for var in self.vars:
             try:
                 x_dim, y_dim = _get_spatial_dims(self._obj, var=var)
@@ -232,7 +233,7 @@ class RasterDataset(XRasterBase):
         :obj:`xarray.Dataset`:
             The padded object.
         """
-        padded_dataset = xarray.Dataset(attrs=self._obj.attrs)
+        padded_dataset = xarray.Dataset(attrs=clean_attrs(self._obj.attrs))
         for var in self.vars:
             try:
                 x_dim, y_dim = _get_spatial_dims(self._obj, var=var)
@@ -298,7 +299,7 @@ class RasterDataset(XRasterBase):
         Dataset:
             The clipped object.
         """
-        clipped_dataset = xarray.Dataset(attrs=self._obj.attrs)
+        clipped_dataset = xarray.Dataset(attrs=clean_attrs(self._obj.attrs))
         for var in self.vars:
             try:
                 x_dim, y_dim = _get_spatial_dims(self._obj, var=var)
@@ -388,7 +389,7 @@ class RasterDataset(XRasterBase):
         :obj:`xarray.Dataset`:
             The clipped object.
         """
-        clipped_dataset = xarray.Dataset(attrs=self._obj.attrs)
+        clipped_dataset = xarray.Dataset(attrs=clean_attrs(self._obj.attrs))
         for var in self.vars:
             try:
                 x_dim, y_dim = _get_spatial_dims(self._obj, var=var)
@@ -434,7 +435,7 @@ class RasterDataset(XRasterBase):
         :obj:`xarray.DataArray`:
              The interpolated object.
         """
-        interpolated_dataset = xarray.Dataset(attrs=self._obj.attrs)
+        interpolated_dataset = xarray.Dataset(attrs=clean_attrs(self._obj.attrs))
         for var in self.vars:
             try:
                 x_dim, y_dim = _get_spatial_dims(self._obj, var=var)
@@ -557,7 +558,7 @@ class RasterDataset(XRasterBase):
             all(nodataval == nodata for nodataval in nodatavals)
             or numpy.isnan(nodatavals).all()
         ):
-            data_array.rio.write_nodata(
+            data_array = data_array.rio.write_nodata(
                 nodata, inplace=True, encoded=use_encoded_nodatavals
             )
         else:
@@ -566,7 +567,7 @@ class RasterDataset(XRasterBase):
                 f"Current values: {attr_nodatavals}"
             )
         if self.crs is not None:
-            data_array.rio.write_crs(self.crs, inplace=True)
+            data_array = data_array.rio.write_crs(self.crs, inplace=True)
         # write it to a raster
         return data_array.rio.set_spatial_dims(
             x_dim=self.x_dim,

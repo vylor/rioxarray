@@ -11,6 +11,7 @@ from rasterio.crs import CRS
 from rasterio.merge import merge as _rio_merge
 from xarray import DataArray, Dataset, IndexVariable
 
+from rioxarray._convention._core import clean_attrs, clean_encoding
 from rioxarray._spatial_utils import _get_nonspatial_coords, _make_coords
 
 
@@ -204,23 +205,25 @@ def merge_arrays(
         data=merged_data,
         coords=coords,
         dims=tuple(representative_array.dims),
-        attrs=representative_array.attrs,
+        attrs=clean_attrs(representative_array.attrs.copy()),
     )
-    xda.encoding = representative_array.encoding.copy()
-    xda.rio.write_nodata(
-        nodata if nodata is not None else representative_array.rio.nodata, inplace=True
+    xda.encoding = clean_encoding(representative_array.encoding.copy())
+    return (
+        xda.rio.write_nodata(
+            nodata if nodata is not None else representative_array.rio.nodata,
+            inplace=True,
+        )
+        .rio.write_crs(
+            representative_array.rio.crs,
+            grid_mapping_name=representative_array.rio.grid_mapping,
+            inplace=True,
+        )
+        .rio.write_transform(
+            merged_transform,
+            grid_mapping_name=representative_array.rio.grid_mapping,
+            inplace=True,
+        )
     )
-    xda.rio.write_crs(
-        representative_array.rio.crs,
-        grid_mapping_name=representative_array.rio.grid_mapping,
-        inplace=True,
-    )
-    xda.rio.write_transform(
-        merged_transform,
-        grid_mapping_name=representative_array.rio.grid_mapping,
-        inplace=True,
-    )
-    return xda
 
 
 def merge_datasets(
@@ -287,5 +290,4 @@ def merge_datasets(
         merged_data,
         attrs=representative_ds.attrs,
     )
-    xds.rio.write_crs(merged_data[data_var].rio.crs, inplace=True)
-    return xds
+    return xds.rio.write_crs(merged_data[data_var].rio.crs, inplace=True)

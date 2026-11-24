@@ -50,3 +50,11 @@ class ConventionProtocol(Protocol):
         **kwargs,
     ) -> Union[xarray.Dataset, xarray.DataArray]:
         """Write transform to the object using this convention."""
+
+    @classmethod
+    def clean_attrs(cls, obj: Union[xarray.Dataset, xarray.DataArray]) -> dict:
+        """Retrieve attributes from the object with convention-specific attributes removed."""
+
+    @classmethod
+    def clean_encoding(cls, encoding: dict) -> dict:
+        """Retrieve encoding from the object with convention-specific attributes removed."""

@@ -238,7 +238,7 @@ class CFConvention:
             grid_map_attrs = obj.coords[grid_mapping_name].attrs.copy()
         except KeyError:
             obj.coords[grid_mapping_name] = xarray.Variable((), 0)
-            grid_map_attrs = obj.coords[grid_mapping_name].attrs.copy()
+            grid_map_attrs = {}
         grid_map_attrs["GeoTransform"] = " ".join(
             [str(item) for item in transform.to_gdal()]
         )
@@ -246,3 +246,13 @@ class CFConvention:
         return obj.rio.write_grid_mapping(
             grid_mapping_name=grid_mapping_name, inplace=True
         )
+
+    @classmethod
+    def clean_attrs(cls, attrs: dict) -> dict:
+        """Retrieve attributes from an xarray object with CF attributes removed."""
+        return {attr: value for attr, value in attrs.items() if attr != "grid_mapping"}
+
+    @classmethod
+    def clean_encoding(cls, encoding: dict) -> dict:
+        """Retrieve encoding from an xarray object with CF attributes removed."""
+        return {key: value for key, value in encoding.items() if key != "grid_mapping"}

@@ -397,3 +397,33 @@ class ZarrConvention:
                 **kwargs,
             )
         return obj
+
+    @classmethod
+    def clean_attrs(cls, attrs: dict) -> dict:
+        """
+        Retrieve attributes from an xarray object with GeoZarr attributes removed.
+
+        Parameters
+        ----------
+        attrs : dict
+            Attributes to clean
+        """
+        attrs = {
+            name: value
+            for name, value in attrs.items()
+            if not name.startswith(("spatial:", "proj:"))
+        }
+        if (zarr_conventions := attrs.pop("zarr_conventions", None)) is not None:
+            zarr_conventions = [
+                convention
+                for convention in zarr_conventions
+                if convention["name"] not in ("spatial:", "proj:")
+            ]
+            if zarr_conventions:
+                attrs["zarr_conventions"] = zarr_conventions
+        return attrs
+
+    @classmethod
+    def clean_encoding(cls, encoding: dict) -> dict:
+        """Retrieve encoding from an xarray object with GeoZarr attributes removed."""
+        return encoding

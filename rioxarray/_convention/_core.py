@@ -174,3 +174,19 @@ def read_spatial_dimensions_auto(
             return result
 
     return None
+
+
+def clean_attrs(attrs: dict) -> dict:
+    """Remove convention-specific attributes from an attribute dictionary."""
+    cleaned_attrs = attrs.copy()
+    for convention in _CONVENTION_MODULES.values():
+        cleaned_attrs = convention.clean_attrs(cleaned_attrs)
+    return cleaned_attrs
+
+
+def clean_encoding(encoding: dict) -> dict:
+    """Remove convention-specific attributes from an encoding dictionary."""
+    cleaned_encoding = encoding.copy()
+    for convention in _CONVENTION_MODULES.values():
+        cleaned_encoding = convention.clean_encoding(cleaned_encoding)
+    return cleaned_encoding
