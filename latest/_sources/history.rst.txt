@@ -4,6 +4,7 @@ History
 Latest
 ------
 - DOC: pass right arguments to Lock (#962)
+- BUG: Write WKT2 to Zarr (#961)
 
 0.24.0
 ------
