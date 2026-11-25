@@ -107,6 +107,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.backends.file_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileManager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.dtypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_fill_value</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray._convention._core</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_convention</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray._spatial_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_NODATA_DTYPE_MAP</span><span class="p">,</span>
     <span class="n">_add_attrs_proj</span><span class="p">,</span>
@@ -435,12 +436,13 @@
             <span class="n">dims</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">dst_dims</span><span class="p">),</span>
             <span class="n">attrs</span><span class="o">=</span><span class="n">new_attrs</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">xda</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">encoding</span>
-        <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">dst_affine</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">dst_crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_coordinate_system</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">xda</span>
+        <span class="n">xda</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">xda</span> <span class="o">=</span> <span class="n">clean_convention</span><span class="p">(</span><span class="n">xda</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">dst_affine</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">dst_crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_coordinate_system</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reproj_update_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Helper function updating kwargs from internal members"""</span>
@@ -662,8 +664,7 @@
         <span class="p">)</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">set_spatial_dims</span><span class="p">(</span><span class="n">x_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_dim</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">superset</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">x_dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_coord</span>
         <span class="n">superset</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">y_dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_coord</span>
-        <span class="n">superset</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">superset</span></div>
+        <span class="k">return</span> <span class="n">superset</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RasterArray.pad_box">
@@ -719,9 +720,7 @@
         <span class="p">)</span>
 
         <span class="c1"># make sure correct attributes preserved &amp; projection added</span>
-        <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">pd_array</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">pd_array</span></div>
+        <span class="k">return</span> <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">pd_array</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RasterArray.clip_box">
@@ -858,8 +857,7 @@
                 <span class="p">)</span>
 
         <span class="c1"># make sure correct attributes preserved &amp; projection added</span>
-        <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">cl_array</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cl_array</span></div>
+        <span class="k">return</span> <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">cl_array</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RasterArray.clip">
@@ -960,9 +958,7 @@
             <span class="p">)</span>
 
         <span class="c1"># make sure correct attributes preserved &amp; projection added</span>
-        <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">cropped_ds</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">cropped_ds</span></div>
+        <span class="k">return</span> <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">cropped_ds</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_interpolate_na</span><span class="p">(</span>
@@ -1063,14 +1059,12 @@
             <span class="n">data</span><span class="o">=</span><span class="n">interp_data</span><span class="p">,</span>
             <span class="n">coords</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span>
             <span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
-            <span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
         <span class="p">)</span>
-        <span class="n">interp_array</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">encoding</span>
+        <span class="n">interp_array</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># make sure correct attributes preserved &amp; projection added</span>
-        <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">interp_array</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">interp_array</span></div>
+        <span class="k">return</span> <span class="n">_add_attrs_proj</span><span class="p">(</span><span class="n">new_data_array</span><span class="o">=</span><span class="n">interp_array</span><span class="p">,</span> <span class="n">src_data_array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RasterArray.to_raster">

@@ -90,6 +90,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.merge</span><span class="w"> </span><span class="kn">import</span> <span class="n">merge</span> <span class="k">as</span> <span class="n">_rio_merge</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataArray</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">IndexVariable</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray._convention._core</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_convention</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray._spatial_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_nonspatial_coords</span><span class="p">,</span> <span class="n">_make_coords</span>
 
 
@@ -285,23 +286,26 @@
         <span class="n">data</span><span class="o">=</span><span class="n">merged_data</span><span class="p">,</span>
         <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span>
         <span class="n">dims</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">representative_array</span><span class="o">.</span><span class="n">dims</span><span class="p">),</span>
-        <span class="n">attrs</span><span class="o">=</span><span class="n">representative_array</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="n">representative_array</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
     <span class="p">)</span>
     <span class="n">xda</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">representative_array</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span>
-        <span class="n">nodata</span> <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">nodata</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span>
-    <span class="p">)</span>
-    <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span>
-        <span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
-        <span class="n">grid_mapping_name</span><span class="o">=</span><span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">grid_mapping</span><span class="p">,</span>
-        <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span>
-        <span class="n">merged_transform</span><span class="p">,</span>
-        <span class="n">grid_mapping_name</span><span class="o">=</span><span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">grid_mapping</span><span class="p">,</span>
-        <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">xda</span></div>
+    <span class="n">xda</span> <span class="o">=</span> <span class="n">clean_convention</span><span class="p">(</span><span class="n">xda</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">xda</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span>
+            <span class="n">nodata</span> <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">nodata</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span>
+            <span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
+            <span class="n">grid_mapping_name</span><span class="o">=</span><span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">grid_mapping</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span>
+            <span class="n">merged_transform</span><span class="p">,</span>
+            <span class="n">grid_mapping_name</span><span class="o">=</span><span class="n">representative_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">grid_mapping</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
 
@@ -371,8 +375,7 @@
         <span class="n">merged_data</span><span class="p">,</span>
         <span class="n">attrs</span><span class="o">=</span><span class="n">representative_ds</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">xds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">merged_data</span><span class="p">[</span><span class="n">data_var</span><span class="p">]</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">xds</span></div>
+    <span class="k">return</span> <span class="n">xds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">merged_data</span><span class="p">[</span><span class="n">data_var</span><span class="p">]</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 </pre></div>
 

@@ -93,6 +93,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">affine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Affine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resampling</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray._convention._core</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_convention_attrs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray._options</span><span class="w"> </span><span class="kn">import</span> <span class="n">SKIP_MISSING_SPATIAL_DIMS</span><span class="p">,</span> <span class="n">get_option</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">MissingSpatialDimensionError</span><span class="p">,</span> <span class="n">RioXarrayError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rioxarray.rioxarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">XRasterBase</span><span class="p">,</span> <span class="n">_get_spatial_dims</span>
@@ -199,7 +200,9 @@
 <span class="sd">        :class:`xarray.Dataset`:</span>
 <span class="sd">            The reprojected Dataset.</span>
 <span class="sd">        """</span>
-        <span class="n">resampled_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="n">resampled_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="n">clean_convention_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span> <span class="o">=</span> <span class="n">_get_spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
@@ -262,7 +265,9 @@
 <span class="sd">            Contains the data from the src_data_array,</span>
 <span class="sd">            reprojected to match match_data_array.</span>
 <span class="sd">        """</span>
-        <span class="n">resampled_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="n">resampled_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="n">clean_convention_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span> <span class="o">=</span> <span class="n">_get_spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
@@ -321,7 +326,7 @@
 <span class="sd">        :obj:`xarray.Dataset`:</span>
 <span class="sd">            The padded object.</span>
 <span class="sd">        """</span>
-        <span class="n">padded_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="n">padded_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="n">clean_convention_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span> <span class="o">=</span> <span class="n">_get_spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
@@ -390,7 +395,7 @@
 <span class="sd">        Dataset:</span>
 <span class="sd">            The clipped object.</span>
 <span class="sd">        """</span>
-        <span class="n">clipped_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="n">clipped_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="n">clean_convention_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span> <span class="o">=</span> <span class="n">_get_spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
@@ -483,7 +488,7 @@
 <span class="sd">        :obj:`xarray.Dataset`:</span>
 <span class="sd">            The clipped object.</span>
 <span class="sd">        """</span>
-        <span class="n">clipped_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="n">clipped_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="n">clean_convention_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span> <span class="o">=</span> <span class="n">_get_spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
@@ -532,7 +537,9 @@
 <span class="sd">        :obj:`xarray.DataArray`:</span>
 <span class="sd">             The interpolated object.</span>
 <span class="sd">        """</span>
-        <span class="n">interpolated_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="n">interpolated_dataset</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
+            <span class="n">attrs</span><span class="o">=</span><span class="n">clean_convention_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span> <span class="o">=</span> <span class="n">_get_spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
@@ -658,7 +665,7 @@
             <span class="nb">all</span><span class="p">(</span><span class="n">nodataval</span> <span class="o">==</span> <span class="n">nodata</span> <span class="k">for</span> <span class="n">nodataval</span> <span class="ow">in</span> <span class="n">nodatavals</span><span class="p">)</span>
             <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">nodatavals</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
         <span class="p">):</span>
-            <span class="n">data_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span>
+            <span class="n">data_array</span> <span class="o">=</span> <span class="n">data_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span>
                 <span class="n">nodata</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">encoded</span><span class="o">=</span><span class="n">use_encoded_nodatavals</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -667,7 +674,7 @@
                 <span class="sa">f</span><span class="s2">"Current values: </span><span class="si">{</span><span class="n">attr_nodatavals</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">data_array</span> <span class="o">=</span> <span class="n">data_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># write it to a raster</span>
         <span class="k">return</span> <span class="n">data_array</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">set_spatial_dims</span><span class="p">(</span>
             <span class="n">x_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x_dim</span><span class="p">,</span>
