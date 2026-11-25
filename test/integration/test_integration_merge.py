@@ -110,7 +110,8 @@ def test_merge__different_crs(dataset):
         assert merged.encoding["grid_mapping"] == "spatial_ref"
 
 
-def test_merge_arrays__res():
+@pytest.mark.parametrize("res", [(300, 300), (300, -300), 300, -300, (300,)])
+def test_merge_arrays__res(res):
     dem_test = os.path.join(TEST_INPUT_DATA_DIR, "MODIS_ARRAY.nc")
     with open_rasterio(dem_test, masked=True) as rds:
         arrays = [
@@ -119,7 +120,7 @@ def test_merge_arrays__res():
             rds.isel(x=slice(100), y=slice(100, 200)),
             rds.isel(x=slice(100, 200), y=slice(100)),
         ]
-        merged = merge_arrays(arrays, res=(300, 300))
+        merged = merge_arrays(arrays, res=res)
 
         assert_almost_equal(
             merged.rio.bounds(),
@@ -149,6 +150,25 @@ def test_merge_arrays__res():
         assert_almost_equal(merged.rio.encoded_nodata, rds.rio.encoded_nodata)
         assert merged.encoding["grid_mapping"] == "spatial_ref"
         assert_almost_equal(nansum(merged), 13760565)
+
+
+def test_merge_arrays__rio_resolution():
+    dem_test = os.path.join(TEST_INPUT_DATA_DIR, "MODIS_ARRAY.nc")
+    with xarray.open_dataarray(dem_test, mask_and_scale=False) as rds:
+        reproj = rds.isel(x=slice(100), y=slice(100)).rio.reproject("EPSG:3857")
+        other = rds.isel(x=slice(100, 200), y=slice(100, 200))
+        assert reproj.rio.resolution()[1] < 0
+        merged = merge_arrays(
+            [reproj, other],
+            res=reproj.rio.resolution(),
+            crs=reproj.rio.crs,
+        )
+        expected = merge_arrays([reproj, other], crs=reproj.rio.crs)
+        assert merged.rio.shape == expected.rio.shape
+        assert_almost_equal(
+            tuple(merged.rio.transform()), tuple(expected.rio.transform())
+        )
+        assert_almost_equal(merged.values, expected.values)
 
 
 @pytest.mark.xfail(os.name == "nt", reason="On windows the merged data is different.")

@@ -3,6 +3,7 @@ History
 
 Latest
 ------
+- BUG: Handle negative resolution values (e.g. from ``rio.resolution()``) and scalar resolutions in ``merge_arrays`` (issue #692)
 
 0.25.1
 ------

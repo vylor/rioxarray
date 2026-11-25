@@ -3,7 +3,7 @@ This module allows you to merge xarray Datasets/DataArrays
 geospatially with the `rasterio.merge` module.
 """
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import Callable, Optional, Union
 
 import numpy
@@ -13,6 +13,15 @@ from xarray import DataArray, Dataset, IndexVariable
 
 from rioxarray._convention._core import clean_convention
 from rioxarray._spatial_utils import _get_nonspatial_coords, _make_coords
+
+
+def _parse_res(res: Union[tuple, float]) -> tuple[float, float]:
+    if isinstance(res, Iterable):
+        res_tuple = tuple(abs(res_val) for res_val in res)
+        if len(res_tuple) == 1:
+            return (res_tuple[0], res_tuple[0])
+        return (res_tuple[0], res_tuple[1])
+    return (abs(res), abs(res))
 
 
 class RasterioDatasetDuck:
@@ -91,7 +100,7 @@ def merge_arrays(
     dataarrays: Sequence[DataArray],
     *,
     bounds: Optional[tuple] = None,
-    res: Optional[tuple] = None,
+    res: Optional[Union[tuple, float]] = None,
     nodata: Optional[float] = None,
     precision: Optional[float] = None,
     method: Union[str, Callable, None] = None,
@@ -114,7 +123,7 @@ def merge_arrays(
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
         If not set, bounds are determined from bounds of input DataArrays.
-    res: tuple, optional
+    res: tuple or float, optional
         Output resolution in units of coordinate reference system.
         If not set, the resolution of the first DataArray is used.
         If a single value is passed, output pixels will be square.
@@ -135,9 +144,10 @@ def merge_arrays(
     :obj:`xarray.DataArray`:
         The geospatially merged data.
     """
+    dst_res = _parse_res(res) if res else None
     input_kwargs = {
         "bounds": bounds,
-        "res": res,
+        "res": dst_res,
         "nodata": nodata,
         "precision": precision,
         "method": method,
@@ -145,17 +155,19 @@ def merge_arrays(
 
     if crs is None:
         crs = dataarrays[0].rio.crs
-    if res is None:
-        res = tuple(abs(res_val) for res_val in dataarrays[0].rio.resolution())
+    if dst_res is None:
+        dst_res = _parse_res(dataarrays[0].rio.resolution())
 
     # prepare the duck arrays
     rioduckarrays = []
     for dataarray in dataarrays:
-        da_res = tuple(abs(res_val) for res_val in dataarray.rio.resolution())
-        if da_res != res or dataarray.rio.crs != crs:
+        if (
+            _parse_res(dataarray.rio.resolution()) != dst_res
+            or dataarray.rio.crs != crs
+        ):
             rioduckarrays.append(
                 RasterioDatasetDuck(
-                    dataarray.rio.reproject(dst_crs=crs, resolution=res)
+                    dataarray.rio.reproject(dst_crs=crs, resolution=dst_res)
                 )
             )
         else:
@@ -231,7 +243,7 @@ def merge_datasets(
     datasets: Sequence[Dataset],
     *,
     bounds: Optional[tuple] = None,
-    res: Optional[tuple] = None,
+    res: Optional[Union[tuple, float]] = None,
     nodata: Optional[float] = None,
     precision: Optional[float] = None,
     method: Union[str, Callable, None] = None,
@@ -253,7 +265,7 @@ def merge_datasets(
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
         If not set, bounds are determined from bounds of input Dataset.
-    res: tuple, optional
+    res: tuple or float, optional
         Output resolution in units of coordinate reference system.
         If not set, the resolution of the first Dataset is used.
         If a single value is passed, output pixels will be square.
