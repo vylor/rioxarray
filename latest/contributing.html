@@ -185,6 +185,13 @@ $<span class="w"> </span>.<span class="w"> </span>venv/bin/activate
 </pre></div>
 </div>
 </li>
+<li><p>Check your code quality:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pylint<span class="w"> </span>rioxarray
+$<span class="w"> </span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
+$<span class="w"> </span>mypy<span class="w"> </span>rioxarray
+</pre></div>
+</div>
+</li>
 <li><p>Commit your changes and push your branch to GitHub (this should trigger pre-commit checks):</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>add<span class="w"> </span>.
 $<span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Your detailed description of your changes."</span>
