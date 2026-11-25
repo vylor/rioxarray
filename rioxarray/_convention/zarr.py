@@ -14,6 +14,7 @@ import xarray
 from affine import Affine
 from rasterio.enums import WktVersion
 
+from rioxarray._convention._base import XDataT
 from rioxarray._spatial_utils import _has_spatial_dims
 from rioxarray.crs import crs_from_user_input
 
@@ -396,4 +397,39 @@ class ZarrConvention:
                 transform=transform,
                 **kwargs,
             )
+        return obj
+
+    @classmethod
+    def clean_attrs(cls, attrs: dict) -> dict:
+        """
+        Retrieve attributes from an xarray object with GeoZarr attributes removed.
+
+        Parameters
+        ----------
+        attrs : dict
+            Attributes to clean
+        """
+        attrs = {
+            name: value
+            for name, value in attrs.items()
+            if not name.startswith(("spatial:", "proj:"))
+        }
+        if (zarr_conventions := attrs.pop("zarr_conventions", None)) is not None:
+            zarr_conventions = [
+                convention
+                for convention in zarr_conventions
+                if convention["name"] not in ("spatial:", "proj:")
+            ]
+            if zarr_conventions:
+                attrs["zarr_conventions"] = zarr_conventions
+        return attrs
+
+    @classmethod
+    def clean_encoding(cls, encoding: dict) -> dict:
+        """Retrieve encoding from an xarray object with GeoZarr attributes removed."""
+        return encoding
+
+    @classmethod
+    def clean_vars(cls, obj: XDataT) -> XDataT:
+        """Remove GeoZarr variables from an xarray object."""
         return obj

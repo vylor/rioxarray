@@ -28,6 +28,7 @@ from rasterio.io import DatasetReader, MemoryFile
 from xarray.backends.file_manager import FileManager
 from xarray.core.dtypes import get_fill_value
 
+from rioxarray._convention._core import clean_convention
 from rioxarray._spatial_utils import (
     _NODATA_DTYPE_MAP,
     _add_attrs_proj,
@@ -345,12 +346,13 @@ class RasterArray(XRasterBase):
             dims=tuple(dst_dims),
             attrs=new_attrs,
         )
-        xda.encoding = self._obj.encoding
-        xda.rio.write_transform(dst_affine, inplace=True)
-        xda.rio.write_crs(dst_crs, inplace=True)
-        xda.rio.write_coordinate_system(inplace=True)
-
-        return xda
+        xda.encoding = self._obj.encoding.copy()
+        xda = clean_convention(xda)
+        return (
+            xda.rio.write_transform(dst_affine, inplace=True)
+            .rio.write_crs(dst_crs, inplace=True)
+            .rio.write_coordinate_system(inplace=True)
+        )
 
     def _reproj_update_kwargs(self, **kwargs):
         """Helper function updating kwargs from internal members"""
@@ -567,8 +569,7 @@ class RasterArray(XRasterBase):
         ).rio.set_spatial_dims(x_dim=self.x_dim, y_dim=self.y_dim, inplace=True)
         superset[self.x_dim] = x_coord
         superset[self.y_dim] = y_coord
-        superset.rio.write_transform(inplace=True)
-        return superset
+        return superset.rio.write_transform(inplace=True)
 
     def pad_box(
         self,
@@ -621,9 +622,7 @@ class RasterArray(XRasterBase):
         )
 
         # make sure correct attributes preserved & projection added
-        _add_attrs_proj(new_data_array=pd_array, src_data_array=self._obj)
-
-        return pd_array
+        return _add_attrs_proj(new_data_array=pd_array, src_data_array=self._obj)
 
     def clip_box(
         self,
@@ -757,8 +756,7 @@ class RasterArray(XRasterBase):
                 )
 
         # make sure correct attributes preserved & projection added
-        _add_attrs_proj(new_data_array=cl_array, src_data_array=self._obj)
-        return cl_array
+        return _add_attrs_proj(new_data_array=cl_array, src_data_array=self._obj)
 
     def clip(
         self,
@@ -856,9 +854,7 @@ class RasterArray(XRasterBase):
             )
 
         # make sure correct attributes preserved & projection added
-        _add_attrs_proj(new_data_array=cropped_ds, src_data_array=self._obj)
-
-        return cropped_ds
+        return _add_attrs_proj(new_data_array=cropped_ds, src_data_array=self._obj)
 
     def _interpolate_na(
         self,
@@ -956,14 +952,12 @@ class RasterArray(XRasterBase):
             data=interp_data,
             coords=self._obj.coords,
             dims=self._obj.dims,
-            attrs=self._obj.attrs,
+            attrs=self._obj.attrs.copy(),
         )
-        interp_array.encoding = self._obj.encoding
+        interp_array.encoding = self._obj.encoding.copy()
 
         # make sure correct attributes preserved & projection added
-        _add_attrs_proj(new_data_array=interp_array, src_data_array=self._obj)
-
-        return interp_array
+        return _add_attrs_proj(new_data_array=interp_array, src_data_array=self._obj)
 
     def to_raster(
         self,

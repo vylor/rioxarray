@@ -1270,14 +1270,14 @@ def open_rasterio(
     # For serialization store as tuple of 6 floats, the last row being
     # always (0, 0, 1) per definition (see
     # https://github.com/sgillies/affine)
-    result.rio.write_transform(riods.transform, inplace=True)
+    result = result.rio.write_transform(riods.transform, inplace=True)
     rio_crs = riods.crs or result.rio.crs
     if rio_crs:
-        result.rio.write_crs(rio_crs, inplace=True)
+        result = result.rio.write_crs(rio_crs, inplace=True)
     if has_gcps:
-        result.rio.write_gcps(*riods.gcps, inplace=True)
+        result = result.rio.write_gcps(*riods.gcps, inplace=True)
     if has_rpcs:
-        result.rio.write_rpcs(riods.rpcs, inplace=True)
+        result = result.rio.write_rpcs(riods.rpcs, inplace=True)
 
     if chunks is not None:
         result = _prepare_dask(

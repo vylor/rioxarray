@@ -349,6 +349,10 @@ def _add_attrs_proj(
     *, new_data_array: xarray.DataArray, src_data_array: xarray.DataArray
 ) -> xarray.DataArray:
     """Make sure attributes and projection correct"""
+    from rioxarray._convention._core import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        clean_convention,
+    )
+
     # make sure dimension information is preserved
     if new_data_array.rio._x_dim is None:
         new_data_array.rio._x_dim = src_data_array.rio.x_dim
@@ -362,20 +366,34 @@ def _add_attrs_proj(
     # source data array instead of being generated anew.
     if "_FillValue" in new_data_array.encoding:
         new_attrs.pop("_FillValue", None)
-
     new_data_array.rio.set_attrs(new_attrs, inplace=True)
-
-    # make sure projection added
-    new_data_array.rio.write_crs(
-        src_data_array.rio.crs,
-        grid_mapping_name=src_data_array.rio.grid_mapping,
-        inplace=True,
-    )
-    new_data_array.rio.write_coordinate_system(inplace=True)
-    new_data_array.rio.write_transform(inplace=True)
     # make sure encoding added
     new_data_array.encoding = src_data_array.encoding.copy()
-    return new_data_array
+    # cache spatial metadata
+    new_transform = new_data_array.rio._cached_transform()
+    # clean convention metadata before writing the projection
+    new_data_array = clean_convention(new_data_array)
+    # make sure projection metadata is added
+    new_data_array = (
+        new_data_array.rio.write_crs(
+            src_data_array.rio.crs,
+            grid_mapping_name=src_data_array.rio.grid_mapping,
+            inplace=True,
+        )
+        .rio.set_spatial_dims(
+            x_dim=src_data_array.rio.x_dim,
+            y_dim=src_data_array.rio.y_dim,
+            inplace=True,
+        )
+        .rio.write_coordinate_system(inplace=True)
+    )
+    # write cached transform for edge cases where cached
+    # resolution is required to re-calculate the transform
+    # (e.g. 1-dimensional rasters) or for rasters without coordinates.
+    if new_transform is not None:
+        new_data_array = new_data_array.rio.write_transform(new_transform, inplace=True)
+    # re-calculate transform in case bounds changed
+    return new_data_array.rio.write_transform(inplace=True)
 
 
 def _make_dst_affine(
@@ -460,9 +478,9 @@ def _clip_from_disk(
             dst_height=height,
         ),
         dims=xds.dims,
-        attrs=xds.attrs,
-    )
-    cropped_ds.encoding = xds.encoding
+        attrs=xds.attrs.copy(),
+    ).rio.write_transform(out_transform, inplace=True)
+    cropped_ds.encoding = xds.encoding.copy()
     return cropped_ds
 
 
