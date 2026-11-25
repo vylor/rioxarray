@@ -1,7 +1,7 @@
 History
 =======
 
-Latest
+0.25.1
 ------
 - BUG: Remove convention metadata before applying new metadata (#966)
 
