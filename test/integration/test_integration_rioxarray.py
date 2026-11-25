@@ -948,6 +948,119 @@ def test_pad_box__non_geospatial(dummy_dataset_non_geospatial):
 
 
 @pytest.mark.parametrize(
+    ("transform", "expected"),
+    [
+        (Affine(2, 0.5, 10, 0.25, -3, 20), (10, 14, 17, 20.75)),
+        (Affine(2, -1, 10, 0, -3, 20), (8, 14, 16, 20)),
+        (Affine(0, -2, 10, 3, 0, 20), (6, 20, 10, 29)),
+        (Affine(-2, 0, 10, 0, 3, 20), (4, 20, 10, 26)),
+    ],
+)
+def test_bounds_from_raster_footprint(tmp_path, transform, expected):
+    path = tmp_path / "grid.tif"
+    with rasterio.open(
+        path,
+        "w",
+        driver="GTiff",
+        width=3,
+        height=2,
+        count=1,
+        dtype="uint8",
+        transform=transform,
+    ) as dataset:
+        dataset.write(numpy.zeros((2, 3), dtype="uint8"), 1)
+
+    with rioxarray.open_rasterio(path) as grid:
+        assert grid.rio.bounds() == pytest.approx(expected)
+        assert grid.rio.bounds(recalc=True) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("transform", "slices", "expected"),
+    [
+        (Affine(2, 1e-12, 10, 0, -3, 20), {"x": slice(1, 3)}, (12, 14, 16, 20)),
+        (
+            Affine(2, 1e-12, 10, 0, -3, 20),
+            {"x": slice(1, 3), "y": slice(1, 2)},
+            (12, 14, 16, 17),
+        ),
+        (
+            Affine(-2, 0, 10, -1e-12, 3, 20),
+            {"x": slice(1, 3), "y": slice(1, 2)},
+            (4, 23, 8, 26),
+        ),
+    ],
+)
+def test_bounds_of_sliced_axis_coordinates_with_rounding_noise(
+    tmp_path, transform, slices, expected
+):
+    path = tmp_path / "near-axis-aligned.tif"
+    with rasterio.open(
+        path,
+        "w",
+        driver="GTiff",
+        width=3,
+        height=2,
+        count=1,
+        dtype="uint8",
+        transform=transform,
+    ) as dataset:
+        dataset.write(numpy.zeros((2, 3), dtype="uint8"), 1)
+
+    with rioxarray.open_rasterio(path) as grid:
+        cropped = grid.isel(slices)
+        assert cropped.rio.bounds() == pytest.approx(expected)
+        assert cropped.rio.bounds(recalc=True) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("parse_coordinates", [False, True])
+@pytest.mark.parametrize(
+    "transform",
+    [
+        Affine(2, 0.5, 1000, 0.25, -3, -400),
+        Affine(2, -1, -500, 0, 3, 600),
+        Affine(2, 0.5, 1000, 0.5, -3, -400),
+        Affine(0, -2, 1000, 3, 0, -400),
+        Affine.rotation(30) @ Affine.scale(2, -3),
+        Affine(0, -1e-6, 10, 1e-6, 0, 20),
+        Affine(2e-6, 5e-7, 10, 3e-7, -3e-6, 20),
+    ],
+)
+def test_bounds_from_offset_footprint(tmp_path, transform, parse_coordinates):
+    path = tmp_path / "offset.tif"
+    # Independent scalar corner arithmetic, rather than the bounds helper.
+    corners = [
+        (
+            transform.c + transform.a * col + transform.b * row,
+            transform.f + transform.d * col + transform.e * row,
+        )
+        for col, row in [(0, 0), (3, 0), (0, 2), (3, 2)]
+    ]
+    expected = (
+        min(x for x, _ in corners),
+        min(y for _, y in corners),
+        max(x for x, _ in corners),
+        max(y for _, y in corners),
+    )
+    with rasterio.open(
+        path,
+        "w",
+        driver="GTiff",
+        width=3,
+        height=2,
+        count=1,
+        dtype="uint8",
+        transform=transform,
+    ) as dataset:
+        dataset.write(numpy.zeros((2, 3), dtype="uint8"), 1)
+        assert tuple(dataset.bounds) == pytest.approx(expected, rel=0, abs=1e-12)
+
+    with rioxarray.open_rasterio(path, parse_coordinates=parse_coordinates) as grid:
+        assert grid.rio.bounds() == pytest.approx(expected, rel=0, abs=1e-12)
+        assert grid.rio.bounds(recalc=True) == pytest.approx(expected, rel=0, abs=1e-12)
+
+
+@pytest.mark.parametrize(
     "open_func",
     [
         partial(xarray.open_dataset, decode_coords="all"),
