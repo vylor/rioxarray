@@ -4,7 +4,7 @@ requires = ["setuptools"]
 
 [project]
 name = "rioxarray"
-version = "0.25.1"
+version = "0.25.2.dev0"
 description = "geospatial xarray extension powered by rasterio"
 maintainers = [
     {name = "rioxarray Contributors"},
