@@ -11,7 +11,7 @@ from rasterio.crs import CRS
 from rasterio.merge import merge as _rio_merge
 from xarray import DataArray, Dataset, IndexVariable
 
-from rioxarray._convention._core import clean_attrs, clean_encoding
+from rioxarray._convention._core import clean_convention
 from rioxarray._spatial_utils import _get_nonspatial_coords, _make_coords
 
 
@@ -205,9 +205,10 @@ def merge_arrays(
         data=merged_data,
         coords=coords,
         dims=tuple(representative_array.dims),
-        attrs=clean_attrs(representative_array.attrs.copy()),
+        attrs=representative_array.attrs.copy(),
     )
-    xda.encoding = clean_encoding(representative_array.encoding.copy())
+    xda.encoding = representative_array.encoding.copy()
+    xda = clean_convention(xda)
     return (
         xda.rio.write_nodata(
             nodata if nodata is not None else representative_array.rio.nodata,

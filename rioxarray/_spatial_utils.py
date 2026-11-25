@@ -327,10 +327,8 @@ def _convert_str_to_resampling(name: str) -> rasterio.warp.Resampling:
 def _generate_attrs(
     *, src_data_array: xarray.DataArray, dst_nodata: Optional[float]
 ) -> dict[str, Any]:
-    from rioxarray._convention._core import clean_attrs
-
     # add original attributes
-    new_attrs = copy.deepcopy(clean_attrs(src_data_array.attrs))
+    new_attrs = copy.deepcopy(src_data_array.attrs)
     # remove all nodata information
     for unwanted_attr in FILL_VALUE_NAMES + UNWANTED_RIO_ATTRS:
         new_attrs.pop(unwanted_attr, None)
@@ -351,7 +349,9 @@ def _add_attrs_proj(
     *, new_data_array: xarray.DataArray, src_data_array: xarray.DataArray
 ) -> xarray.DataArray:
     """Make sure attributes and projection correct"""
-    from rioxarray._convention._core import clean_encoding
+    from rioxarray._convention._core import (  # pylint: disable=import-outside-toplevel,cyclic-import
+        clean_convention,
+    )
 
     # make sure dimension information is preserved
     if new_data_array.rio._x_dim is None:
@@ -366,18 +366,15 @@ def _add_attrs_proj(
     # source data array instead of being generated anew.
     if "_FillValue" in new_data_array.encoding:
         new_attrs.pop("_FillValue", None)
-    # delete old grid mapping coordinate
-    new_transform = new_data_array.rio._cached_transform()
-    if src_data_array.rio.grid_mapping is not None:
-        new_data_array = new_data_array.drop_vars(
-            src_data_array.rio.grid_mapping, errors="ignore"
-        )
-
     new_data_array.rio.set_attrs(new_attrs, inplace=True)
     # make sure encoding added
-    new_data_array.encoding = clean_encoding(src_data_array.encoding.copy())
-    # make sure projection added
-    return (
+    new_data_array.encoding = src_data_array.encoding.copy()
+    # cache spatial metadata
+    new_transform = new_data_array.rio._cached_transform()
+    # clean convention metadata before writing the projection
+    new_data_array = clean_convention(new_data_array)
+    # make sure projection metadata is added
+    new_data_array = (
         new_data_array.rio.write_crs(
             src_data_array.rio.crs,
             grid_mapping_name=src_data_array.rio.grid_mapping,
@@ -389,8 +386,14 @@ def _add_attrs_proj(
             inplace=True,
         )
         .rio.write_coordinate_system(inplace=True)
-        .rio.write_transform(new_transform, inplace=True)
     )
+    # write cached transform for edge cases where cached
+    # resolution is required to re-calculate the transform
+    # (e.g. 1-dimensional rasters) or for rasters without coordinates.
+    if new_transform is not None:
+        new_data_array = new_data_array.rio.write_transform(new_transform, inplace=True)
+    # re-calculate transform in case bounds changed
+    return new_data_array.rio.write_transform(inplace=True)
 
 
 def _make_dst_affine(

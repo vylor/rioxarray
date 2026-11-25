@@ -13,6 +13,7 @@ import rasterio.crs
 import xarray
 from affine import Affine
 
+from rioxarray._convention._base import XDataT
 from rioxarray._options import EXPORT_GRID_MAPPING, get_option
 from rioxarray.crs import crs_from_user_input
 
@@ -167,17 +168,11 @@ class CFConvention:
         xarray.Dataset or xarray.DataArray
             Object with CRS written
         """
-        # get original transform
-        transform = obj.rio._cached_transform()
-        # remove old grid mapping coordinate if exists
         grid_mapping_name = (
             obj.rio.grid_mapping if grid_mapping_name is None else grid_mapping_name
         )
-        try:
-            del obj.coords[grid_mapping_name]
-        except KeyError:
-            pass
-
+        # cache original spatial information
+        transform = obj.rio._cached_transform()
         # add grid mapping coordinate
         obj.coords[grid_mapping_name] = xarray.Variable((), 0)
         grid_map_attrs = {}
@@ -190,15 +185,15 @@ class CFConvention:
         crs_wkt = crs.to_wkt()
         grid_map_attrs["spatial_ref"] = crs_wkt
         grid_map_attrs["crs_wkt"] = crs_wkt
-        if transform is not None:
-            grid_map_attrs["GeoTransform"] = " ".join(
-                [str(item) for item in transform.to_gdal()]
-            )
         obj.coords[grid_mapping_name].rio.set_attrs(grid_map_attrs, inplace=True)
-
-        return obj.rio.write_grid_mapping(
+        obj = obj.rio.write_grid_mapping(
             grid_mapping_name=grid_mapping_name, inplace=True
         )
+        if transform is not None:
+            obj = obj.rio.write_transform(
+                transform, grid_mapping_name=grid_mapping_name
+            )
+        return obj
 
     @classmethod
     def write_transform(  # pylint: disable=unused-argument
@@ -235,7 +230,7 @@ class CFConvention:
             obj.rio.grid_mapping if grid_mapping_name is None else grid_mapping_name
         )
         try:
-            grid_map_attrs = obj.coords[grid_mapping_name].attrs.copy()
+            grid_map_attrs = obj.coords[grid_mapping_name].attrs
         except KeyError:
             obj.coords[grid_mapping_name] = xarray.Variable((), 0)
             grid_map_attrs = {}
@@ -246,6 +241,13 @@ class CFConvention:
         return obj.rio.write_grid_mapping(
             grid_mapping_name=grid_mapping_name, inplace=True
         )
+
+    @classmethod
+    def clean_vars(cls, obj: XDataT) -> XDataT:
+        """Remove CF grid_mapping variables from an xarray object."""
+        if obj.rio.grid_mapping is None:
+            return obj
+        return obj.drop_vars(obj.rio.grid_mapping, errors="ignore")
 
     @classmethod
     def clean_attrs(cls, attrs: dict) -> dict:

@@ -2,11 +2,13 @@
 and provides helpers for selecting conventions.
 """
 
-from typing import Optional, Protocol, Union
+from typing import Optional, Protocol, TypeVar, Union
 
 import rasterio.crs
 import xarray
 from affine import Affine
+
+XDataT = TypeVar("XDataT", xarray.Dataset, xarray.DataArray)
 
 
 class ConventionProtocol(Protocol):
@@ -52,9 +54,13 @@ class ConventionProtocol(Protocol):
         """Write transform to the object using this convention."""
 
     @classmethod
-    def clean_attrs(cls, obj: Union[xarray.Dataset, xarray.DataArray]) -> dict:
+    def clean_attrs(cls, attrs: dict) -> dict:
         """Retrieve attributes from the object with convention-specific attributes removed."""
 
     @classmethod
     def clean_encoding(cls, encoding: dict) -> dict:
         """Retrieve encoding from the object with convention-specific attributes removed."""
+
+    @classmethod
+    def clean_vars(cls, obj: XDataT) -> XDataT:
+        """Remove convention-specific variables from the object."""

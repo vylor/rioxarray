@@ -28,7 +28,7 @@ from rasterio.io import DatasetReader, MemoryFile
 from xarray.backends.file_manager import FileManager
 from xarray.core.dtypes import get_fill_value
 
-from rioxarray._convention._core import clean_attrs, clean_encoding
+from rioxarray._convention._core import clean_convention
 from rioxarray._spatial_utils import (
     _NODATA_DTYPE_MAP,
     _add_attrs_proj,
@@ -344,15 +344,15 @@ class RasterArray(XRasterBase):
                 force_generate=not use_affine,
             ),
             dims=tuple(dst_dims),
-            attrs=clean_attrs(new_attrs),
+            attrs=new_attrs,
         )
-
-        xda.encoding = clean_encoding(self._obj.encoding)
-        xda.rio.write_transform(dst_affine, inplace=True)
-        xda.rio.write_crs(dst_crs, inplace=True)
-        xda.rio.write_coordinate_system(inplace=True)
-
-        return xda
+        xda.encoding = self._obj.encoding.copy()
+        xda = clean_convention(xda)
+        return (
+            xda.rio.write_transform(dst_affine, inplace=True)
+            .rio.write_crs(dst_crs, inplace=True)
+            .rio.write_coordinate_system(inplace=True)
+        )
 
     def _reproj_update_kwargs(self, **kwargs):
         """Helper function updating kwargs from internal members"""

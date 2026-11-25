@@ -8,7 +8,7 @@ import rasterio.crs
 import xarray
 from affine import Affine
 
-from rioxarray._convention._base import ConventionProtocol
+from rioxarray._convention._base import ConventionProtocol, XDataT
 from rioxarray._convention.cf import CFConvention
 from rioxarray._convention.zarr import ZarrConvention
 from rioxarray._options import CONVENTION, get_option
@@ -176,7 +176,7 @@ def read_spatial_dimensions_auto(
     return None
 
 
-def clean_attrs(attrs: dict) -> dict:
+def clean_convention_attrs(attrs: dict) -> dict:
     """Remove convention-specific attributes from an attribute dictionary."""
     cleaned_attrs = attrs.copy()
     for convention in _CONVENTION_MODULES.values():
@@ -184,9 +184,24 @@ def clean_attrs(attrs: dict) -> dict:
     return cleaned_attrs
 
 
-def clean_encoding(encoding: dict) -> dict:
+def clean_convention_encoding(encoding: dict) -> dict:
     """Remove convention-specific attributes from an encoding dictionary."""
     cleaned_encoding = encoding.copy()
     for convention in _CONVENTION_MODULES.values():
         cleaned_encoding = convention.clean_encoding(cleaned_encoding)
     return cleaned_encoding
+
+
+def clean_convention_vars(obj: XDataT) -> XDataT:
+    """Remove convention-specific variables from an xarray object."""
+    for convention in _CONVENTION_MODULES.values():
+        obj = convention.clean_vars(obj)
+    return obj
+
+
+def clean_convention(obj: XDataT) -> XDataT:
+    """Remove convention-specific metadata from an xarray object."""
+    obj = clean_convention_vars(obj)
+    obj.attrs = clean_convention_attrs(obj.attrs)
+    obj.encoding = clean_convention_encoding(obj.encoding)
+    return obj

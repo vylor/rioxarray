@@ -204,7 +204,7 @@ def test_write_transform():
     )
 
 
-def test_clean_attrs_encoding():
+def test_clean_convention():
     """Test cleaning attributes from a DataArray."""
     data = xarray.DataArray(numpy.random.rand(10, 10), dims=["y", "x"])
     transform = Affine(1.0, 0.0, 0.0, 0.0, -1.0, 10.0)
@@ -214,5 +214,7 @@ def test_clean_attrs_encoding():
     )
     crs = CRS.from_epsg(4326)
     result = CFConvention.write_crs(result, crs=crs, grid_mapping_name="spatial_ref")
+
     assert CFConvention.clean_attrs(result.attrs) == {}
     assert CFConvention.clean_encoding(result.encoding) == {}
+    assert "spatial_ref" not in CFConvention.clean_vars(result).coords

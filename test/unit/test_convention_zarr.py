@@ -340,7 +340,7 @@ def test_write_transform__dataset__propagate_to_variables():
             assert variable.attrs["spatial:registration"] == "pixel"
 
 
-def test_clean_attrs_encoding():
+def test_clean_convention():
     """Test cleaning attributes & encoding from a DataArray."""
     data = xr.DataArray(np.random.rand(10, 10), dims=["y", "x"])
     transform = Affine(1.0, 0.0, 0.0, 0.0, -1.0, 10.0)
@@ -348,8 +348,10 @@ def test_clean_attrs_encoding():
     result = ZarrConvention.write_transform(data, transform=transform)
     crs = CRS.from_epsg(4326)
     result = ZarrConvention.write_crs(result, crs=crs)
+
     assert ZarrConvention.clean_attrs(result.attrs) == {}
     assert ZarrConvention.clean_encoding(result.encoding) == result.encoding
+    assert ZarrConvention.clean_vars(result).coords == result.coords
 
 
 def test_clean_attrs__additional_conventions():
@@ -361,7 +363,7 @@ def test_clean_attrs__additional_conventions():
     crs = CRS.from_epsg(4326)
     result = ZarrConvention.write_crs(result, crs=crs)
     result.attrs["zarr_conventions"].append({"name": "other:"})
+
     assert ZarrConvention.clean_attrs(result.attrs) == {
         "zarr_conventions": [{"name": "other:"}]
     }
-    assert ZarrConvention.clean_encoding(result.encoding) == result.encoding

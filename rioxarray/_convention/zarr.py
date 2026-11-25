@@ -14,6 +14,7 @@ import xarray
 from affine import Affine
 from rasterio.enums import WktVersion
 
+from rioxarray._convention._base import XDataT
 from rioxarray._spatial_utils import _has_spatial_dims
 from rioxarray.crs import crs_from_user_input
 
@@ -427,3 +428,8 @@ class ZarrConvention:
     def clean_encoding(cls, encoding: dict) -> dict:
         """Retrieve encoding from an xarray object with GeoZarr attributes removed."""
         return encoding
+
+    @classmethod
+    def clean_vars(cls, obj: XDataT) -> XDataT:
+        """Remove GeoZarr variables from an xarray object."""
+        return obj
