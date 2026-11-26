@@ -3,6 +3,7 @@ History
 
 Latest
 ------
+- DOC: Clarify how ``rio.write_transform()`` metadata and spatial coordinates affect ``rio.transform()`` (#698)
 
 0.25.1
 ------
