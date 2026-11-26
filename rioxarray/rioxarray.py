@@ -387,6 +387,11 @@ class XRasterBase:
         For CF convention, this writes the GeoTransform to the dataset where GDAL can read it in.
         https://gdal.org/drivers/raster/netcdf.html#georeference
 
+        To change the georeferencing of an axis-aligned grid with explicit x and y
+        coordinates, update the pixel centers to match the intended transform as
+        well. See :meth:`transform` for how the accessor derives the origin and
+        resolution.
+
         Parameters
         ----------
         transform: affine.Affine, optional
@@ -426,11 +431,18 @@ class XRasterBase:
 
     def transform(self, recalc: bool = False) -> Affine:
         """
+        Return the affine transform of the raster.
+
+        For an axis-aligned grid with one-dimensional spatial coordinates, the origin is
+        derived from the x and y pixel centers. By default the stored transform,
+        when available, supplies the resolution. Grids without spatial coordinates
+        use the stored transform when available.
+
         Parameters
         ----------
         recalc: bool, optional
-            If True, it will re-calculate the transform instead of using
-            the cached transform.
+            If True, calculate the resolution from the spatial coordinates when
+            possible. Rotated or non-rectilinear grids use their stored transform.
 
         Returns
         -------
